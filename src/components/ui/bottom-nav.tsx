@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Home, Search, Plus, Heart, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,21 +18,21 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-2 safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-2 sm:px-4 py-2 safe-area-pb z-50">
       <div className="flex justify-around items-center max-w-md mx-auto">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => onTabChange(id)}
             className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
+              "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-0 flex-1",
               activeTab === id 
                 ? "text-orange-primary" 
                 : "text-warm-gray-dark hover:text-orange-secondary"
             )}
           >
-            <Icon className="w-6 h-6" />
-            <span className="text-xs font-medium">{label}</span>
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-xs font-medium truncate">{label}</span>
           </button>
         ))}
       </div>

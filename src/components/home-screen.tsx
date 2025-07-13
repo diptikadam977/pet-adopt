@@ -24,7 +24,7 @@ export function HomeScreen({
   const featuredPets = pets.slice(0, 4);
   return <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-gradient-peach px-4 sm:px-6 pt-12 pb-6">
+      <div className="bg-gradient-peach px-4 sm:px-6 pt-12 pb-6 rounded bg-gray-800">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-primary">Paws & Homes</h1>
           

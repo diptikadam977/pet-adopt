@@ -5,66 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-interface Pet {
-  id: string;
-  name: string;
-  breed: string;
-  age: string;
-  image: string;
-  type: string;
-}
-
-const pets: Pet[] = [
-  {
-    id: '1',
-    name: 'Buddy',
-    breed: 'Golden Retriever',
-    age: 'Young',
-    image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=400&fit=crop&crop=faces',
-    type: 'dog'
-  },
-  {
-    id: '2',
-    name: 'Whiskers',
-    breed: 'Siamese',
-    age: 'Adult',
-    image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=400&fit=crop&crop=faces',
-    type: 'cat'
-  },
-  {
-    id: '3',
-    name: 'Luna',
-    breed: 'Husky',
-    age: 'Young',
-    image: 'https://images.unsplash.com/photo-1605568427561-40dd23c2acea?w=400&h=400&fit=crop&crop=faces',
-    type: 'dog'
-  },
-  {
-    id: '4',
-    name: 'Milo',
-    breed: 'Persian',
-    age: 'Adult',
-    image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop&crop=faces',
-    type: 'cat'
-  },
-  {
-    id: '5',
-    name: 'Charlie',
-    breed: 'Labrador',
-    age: 'Young',
-    image: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400&h=400&fit=crop&crop=faces',
-    type: 'dog'
-  },
-  {
-    id: '6',
-    name: 'Bella',
-    breed: 'Maine Coon',
-    age: 'Adult',
-    image: 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&h=400&fit=crop&crop=faces',
-    type: 'cat'
-  }
-];
+import { usePets } from '@/hooks/usePets';
 
 interface SearchScreenProps {
   onBack: () => void;
@@ -72,16 +13,29 @@ interface SearchScreenProps {
 }
 
 export function SearchScreen({ onBack, onPetClick }: SearchScreenProps) {
+  const { pets, loading } = usePets();
   const [activeTypeFilter, setActiveTypeFilter] = useState('all');
   const [activeAgeFilter, setActiveAgeFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const typeFilters = ['Dogs', 'Cats', 'All'];
   const ageFilters = ['Young', 'Adult', 'Senior', 'All'];
 
   const filteredPets = pets.filter(pet => {
-    if (activeTypeFilter !== 'all' && pet.type !== activeTypeFilter.toLowerCase()) return false;
-    if (activeAgeFilter !== 'all' && pet.age.toLowerCase() !== activeAgeFilter.toLowerCase()) return false;
-    return true;
+    const matchesSearch = searchTerm === '' || 
+      pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pet.breed.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pet.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = activeTypeFilter === 'all' || 
+      pet.type.toLowerCase() === activeTypeFilter.toLowerCase().replace('s', '');
+    
+    const matchesAge = activeAgeFilter === 'all' || 
+      (activeAgeFilter === 'young' && (pet.age.includes('month') || pet.age.includes('1 year'))) ||
+      (activeAgeFilter === 'adult' && (pet.age.includes('2') || pet.age.includes('3') || pet.age.includes('4'))) ||
+      (activeAgeFilter === 'senior' && (pet.age.includes('5') || pet.age.includes('6') || pet.age.includes('7')));
+
+    return matchesSearch && matchesType && matchesAge;
   });
 
   return (
@@ -100,8 +54,10 @@ export function SearchScreen({ onBack, onPetClick }: SearchScreenProps) {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-warm-gray-dark" />
           <Input
-            placeholder="Search by name or breed"
+            placeholder="Search by name, breed, or location"
             className="pl-10 sm:pl-12 py-3 bg-warm-gray/20 border-warm-gray rounded-2xl text-sm sm:text-base"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -143,28 +99,49 @@ export function SearchScreen({ onBack, onPetClick }: SearchScreenProps) {
 
       {/* Pet Grid */}
       <div className="px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {filteredPets.map((pet) => (
-            <Card 
-              key={pet.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow rounded-2xl overflow-hidden"
-              onClick={() => onPetClick(pet.id)}
-            >
-              <div className="aspect-square">
-                <img 
-                  src={pet.image} 
-                  alt={pet.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <CardContent className="p-2 sm:p-3">
-                <h3 className="font-bold text-primary text-sm sm:text-base">{pet.name}</h3>
-                <p className="text-xs sm:text-sm text-warm-gray-dark">{pet.breed}</p>
-                <p className="text-xs sm:text-sm text-warm-gray-dark">{pet.age}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-square bg-warm-gray/20" />
+                <CardContent className="p-2 sm:p-3">
+                  <div className="h-4 bg-warm-gray/20 rounded mb-1" />
+                  <div className="h-3 bg-warm-gray/20 rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {filteredPets.map((pet) => (
+              <Card 
+                key={pet.id}
+                className="cursor-pointer hover:shadow-lg transition-shadow rounded-2xl overflow-hidden"
+                onClick={() => onPetClick(pet.id)}
+              >
+                <div className="aspect-square">
+                  <img 
+                    src={pet.images?.[0] || '/placeholder.svg'} 
+                    alt={pet.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="p-2 sm:p-3">
+                  <h3 className="font-bold text-primary text-sm sm:text-base">{pet.name}</h3>
+                  <p className="text-xs sm:text-sm text-warm-gray-dark">{pet.breed}</p>
+                  <p className="text-xs sm:text-sm text-warm-gray-dark">{pet.age}</p>
+                  <p className="text-xs sm:text-sm text-orange-primary font-semibold">${pet.adoption_fee}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+        
+        {!loading && filteredPets.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-warm-gray-dark">No pets found matching your criteria.</p>
+          </div>
+        )}
       </div>
     </div>
   );

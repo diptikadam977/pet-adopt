@@ -1,56 +1,58 @@
+
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from '@/components/splash-screen';
-import { LoginScreen } from '@/components/auth/login-screen';
-import { SignUpScreen } from '@/components/auth/signup-screen';
+import { AuthScreen } from '@/components/auth/auth-screen';
 import { HomeScreen } from '@/components/home-screen';
 import { SearchScreen } from '@/components/search-screen';
 import { PetProfile } from '@/components/pet-profile';
 import { AddPetScreen } from '@/components/add-pet-screen';
 import { ProfileScreen } from '@/components/profile-screen';
 import { ChatScreen } from '@/components/chat-screen';
+import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 type Screen = 
   | 'splash'
-  | 'login' 
-  | 'signup'
+  | 'auth'
   | 'home'
   | 'search'
   | 'pet-profile'
   | 'add-pet'
   | 'profile'
-  | 'chat';
+  | 'chat'
+  | 'adoption-request';
 
-const Index = () => {
+function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [activeTab, setActiveTab] = useState('home');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedPetId, setSelectedPetId] = useState<string>('');
+  const [selectedPet, setSelectedPet] = useState<any>(null);
+  const { user, loading } = useAuth();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  }, []);
+
   const handleSplashComplete = () => {
-    setCurrentScreen('login');
+    setCurrentScreen('home');
   };
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    setCurrentScreen('home');
-    toast({
-      title: "Welcome back!",
-      description: "You have successfully logged in.",
-    });
-  };
-
-  const handleSignUp = () => {
-    setIsAuthenticated(true);
-    setCurrentScreen('home');
-    toast({
-      title: "Account created!",
-      description: "Welcome to Paws & Homes!",
-    });
+  const handleAuth = () => {
+    setCurrentScreen('auth');
   };
 
   const handleTabChange = (tab: string) => {
+    if (tab === 'profile' && !user) {
+      setCurrentScreen('auth');
+      return;
+    }
+    
     setActiveTab(tab);
     switch (tab) {
       case 'home':
@@ -60,7 +62,11 @@ const Index = () => {
         setCurrentScreen('search');
         break;
       case 'add':
-        setCurrentScreen('add-pet');
+        if (!user) {
+          setCurrentScreen('auth');
+        } else {
+          setCurrentScreen('add-pet');
+        }
         break;
       case 'profile':
         setCurrentScreen('profile');
@@ -69,6 +75,7 @@ const Index = () => {
   };
 
   const handlePetClick = (petId: string) => {
+    setSelectedPetId(petId);
     setCurrentScreen('pet-profile');
   };
 
@@ -81,11 +88,13 @@ const Index = () => {
     });
   };
 
-  const handleAdopt = () => {
-    toast({
-      title: "Adoption request sent!",
-      description: "The owner will be notified of your interest.",
-    });
+  const handleAdopt = (pet: any) => {
+    if (!user) {
+      setCurrentScreen('auth');
+      return;
+    }
+    setSelectedPet(pet);
+    setCurrentScreen('adoption-request');
   };
 
   const handleChat = () => {
@@ -93,48 +102,70 @@ const Index = () => {
   };
 
   const handleBack = () => {
-    if (currentScreen === 'search' || currentScreen === 'pet-profile' || currentScreen === 'add-pet' || currentScreen === 'profile' || currentScreen === 'chat') {
+    if (currentScreen === 'search' || currentScreen === 'pet-profile' || 
+        currentScreen === 'add-pet' || currentScreen === 'profile' || 
+        currentScreen === 'chat' || currentScreen === 'adoption-request') {
       setCurrentScreen('home');
       setActiveTab('home');
+    } else if (currentScreen === 'auth') {
+      setCurrentScreen('home');
     }
   };
 
-  if (!isAuthenticated) {
-    if (currentScreen === 'splash') {
-      return <SplashScreen onComplete={handleSplashComplete} />;
-    }
-    if (currentScreen === 'signup') {
-      return <SignUpScreen onSignUp={handleSignUp} onLogin={() => setCurrentScreen('login')} />;
-    }
-    return <LoginScreen onLogin={handleLogin} onSignUp={() => setCurrentScreen('signup')} />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-primary"></div>
+      </div>
+    );
   }
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case 'splash':
+        return <SplashScreen onComplete={handleSplashComplete} />;
+      case 'auth':
+        return <AuthScreen onBack={handleBack} />;
       case 'home':
         return (
           <HomeScreen 
             onPetClick={handlePetClick}
-            onAddPet={() => setCurrentScreen('add-pet')}
+            onAddPet={() => user ? setCurrentScreen('add-pet') : handleAuth()}
             onSearch={() => setCurrentScreen('search')}
+            onAuth={handleAuth}
           />
         );
       case 'search':
         return <SearchScreen onBack={handleBack} onPetClick={handlePetClick} />;
       case 'pet-profile':
-        return <PetProfile onBack={handleBack} onAdopt={handleAdopt} onChat={handleChat} />;
+        return (
+          <PetProfile 
+            onBack={handleBack} 
+            onAdopt={handleAdopt} 
+            onChat={handleChat}
+            petId={selectedPetId}
+          />
+        );
       case 'add-pet':
         return <AddPetScreen onBack={handleBack} onSubmit={handleAddPetSubmit} />;
       case 'profile':
         return <ProfileScreen onBack={handleBack} />;
       case 'chat':
         return <ChatScreen onBack={handleBack} />;
+      case 'adoption-request':
+        return (
+          <AdoptionRequestScreen 
+            onBack={handleBack} 
+            pet={selectedPet}
+          />
+        );
       default:
         return (
           <HomeScreen 
             onPetClick={handlePetClick}
-            onAddPet={() => setCurrentScreen('add-pet')}
+            onAddPet={() => user ? setCurrentScreen('add-pet') : handleAuth()}
             onSearch={() => setCurrentScreen('search')}
+            onAuth={handleAuth}
           />
         );
     }
@@ -143,10 +174,18 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {renderScreen()}
-      {isAuthenticated && !['chat'].includes(currentScreen) && (
+      {!['splash', 'auth', 'chat', 'adoption-request'].includes(currentScreen) && (
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
       )}
     </div>
+  );
+}
+
+const Index = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

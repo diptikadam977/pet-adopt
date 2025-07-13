@@ -1,52 +1,69 @@
-import React, { useState } from 'react';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, ChevronRight, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileScreenProps {
   onBack: () => void;
 }
 
 export function ProfileScreen({ onBack }: ProfileScreenProps) {
-  const user = {
-    name: 'Sophia Carter',
-    email: 'sophia.carter@email.com',
-    avatar: '/lovable-uploads/8eb06a14-cd33-44d7-871d-b5780d546175.png'
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+  const [userPets, setUserPets] = useState<any[]>([]);
+  const [adoptionRequests, setAdoptionRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchUserPets();
+      fetchAdoptionRequests();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    setProfile(data);
   };
 
-  const listedPets = [
-    {
-      id: '1',
-      name: 'Buddy',
-      breed: 'Golden Retriever',
-      image: '/lovable-uploads/42a710fd-3b12-47a8-ae84-16cdc38bba0f.png'
-    },
-    {
-      id: '2',
-      name: 'Snowball',
-      breed: 'Siamese Cat',
-      image: '/lovable-uploads/e0629f7a-170b-453b-8dd8-d2f5cef5c027.png'
-    },
-    {
-      id: '3',
-      name: 'Charlie',
-      breed: 'Beagle',
-      image: '/lovable-uploads/31154413-c1e7-4cb4-81de-7018c48a7b72.png'
-    },
-    {
-      id: '4',
-      name: 'Fluffy',
-      breed: 'Persian Cat',
-      image: '/lovable-uploads/42a710fd-3b12-47a8-ae84-16cdc38bba0f.png'
-    }
-  ];
+  const fetchUserPets = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('pets')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    setUserPets(data || []);
+  };
 
-  const adoptionRequests = [
-    { id: '1', petName: 'Max', requesterName: 'John Doe', status: 'pending' },
-    { id: '2', petName: 'Luna', requesterName: 'Sarah Smith', status: 'approved' }
-  ];
+  const fetchAdoptionRequests = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('adoption_requests')
+      .select(`
+        *,
+        pets:pet_id (name, images),
+        profiles:requester_id (full_name)
+      `)
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    setAdoptionRequests(data || []);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -61,12 +78,16 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
 
         {/* User Info */}
         <div className="flex flex-col items-center text-center mb-6">
-          <Avatar className="w-24 h-24 mb-4">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>SC</AvatarFallback>
-          </Avatar>
-          <h2 className="text-2xl font-bold text-primary">{user.name}</h2>
-          <p className="text-warm-gray-dark">{user.email}</p>
+          <div className="w-24 h-24 mb-4 bg-orange-light rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-orange-primary">
+              {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <h2 className="text-2xl font-bold text-primary">{profile?.full_name || 'User'}</h2>
+          <p className="text-warm-gray-dark">{profile?.email || user?.email}</p>
+          {profile?.location && (
+            <p className="text-warm-gray-dark">{profile.location}</p>
+          )}
         </div>
       </div>
 
@@ -74,50 +95,73 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       <div className="px-6">
         <Tabs defaultValue="listed" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="listed" className="text-primary">Listed Pets</TabsTrigger>
-            <TabsTrigger value="requests" className="text-warm-gray-dark">Adoption Requests</TabsTrigger>
+            <TabsTrigger value="listed" className="text-primary">My Pets ({userPets.length})</TabsTrigger>
+            <TabsTrigger value="requests" className="text-warm-gray-dark">Requests ({adoptionRequests.length})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="listed" className="space-y-4">
-            {listedPets.map((pet) => (
-              <Card key={pet.id} className="rounded-2xl overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex items-center gap-4 p-4">
-                    <img 
-                      src={pet.image} 
-                      alt={pet.name}
-                      className="w-16 h-16 rounded-xl object-cover"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-primary">{pet.name}</h3>
-                      <p className="text-warm-gray-dark">{pet.breed}</p>
+            {userPets.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-warm-gray-dark">You haven't listed any pets yet.</p>
+              </div>
+            ) : (
+              userPets.map((pet) => (
+                <Card key={pet.id} className="rounded-2xl overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="flex items-center gap-4 p-4">
+                      <img 
+                        src={pet.images?.[0] || '/placeholder.svg'} 
+                        alt={pet.name}
+                        className="w-16 h-16 rounded-xl object-cover"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-primary">{pet.name}</h3>
+                        <p className="text-warm-gray-dark">{pet.breed} · {pet.age}</p>
+                        <p className="text-orange-primary font-semibold">${pet.adoption_fee}</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-sm ${
+                        pet.status === 'available' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-orange-light text-orange-secondary'
+                      }`}>
+                        {pet.status}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
           
           <TabsContent value="requests" className="space-y-4">
-            {adoptionRequests.map((request) => (
-              <Card key={request.id} className="rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-primary">{request.petName}</h3>
-                      <p className="text-warm-gray-dark">Request from {request.requesterName}</p>
+            {adoptionRequests.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-warm-gray-dark">No adoption requests yet.</p>
+              </div>
+            ) : (
+              adoptionRequests.map((request) => (
+                <Card key={request.id} className="rounded-2xl">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-primary">{request.pets?.name}</h3>
+                        <p className="text-warm-gray-dark">Request from {request.profiles?.full_name || 'User'}</p>
+                        <p className="text-sm text-warm-gray-dark mt-1">{request.message}</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-sm ml-4 ${
+                        request.status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : request.status === 'rejected'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-orange-light text-orange-secondary'
+                      }`}>
+                        {request.status}
+                      </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-sm ${
-                      request.status === 'approved' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-orange-light text-orange-secondary'
-                    }`}>
-                      {request.status}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -128,18 +172,13 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         
         <Card className="rounded-2xl">
           <CardContent className="p-0">
-            <Button variant="ghost" className="w-full justify-between p-4 h-auto">
-              <span className="text-primary">Edit Profile</span>
-              <ChevronRight className="w-5 h-5 text-warm-gray-dark" />
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card className="rounded-2xl">
-          <CardContent className="p-0">
-            <Button variant="ghost" className="w-full justify-between p-4 h-auto">
-              <span className="text-primary">Logout</span>
-              <ChevronRight className="w-5 h-5 text-warm-gray-dark" />
+            <Button 
+              variant="ghost" 
+              className="w-full justify-between p-4 h-auto text-destructive hover:text-destructive"
+              onClick={signOut}
+            >
+              <span>Logout</span>
+              <LogOut className="w-5 h-5" />
             </Button>
           </CardContent>
         </Card>

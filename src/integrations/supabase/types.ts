@@ -14,7 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      adoption_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          owner_id: string | null
+          pet_id: string | null
+          requester_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          owner_id?: string | null
+          pet_id?: string | null
+          requester_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          owner_id?: string | null
+          pet_id?: string | null
+          requester_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adoption_requests_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          adoption_fee: number | null
+          age: string | null
+          breed: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          energy_level: string | null
+          gender: string | null
+          good_with_kids: boolean | null
+          good_with_pets: boolean | null
+          health_status: string | null
+          id: string
+          images: string[] | null
+          location: string | null
+          name: string
+          size: string | null
+          spayed_neutered: boolean | null
+          status: string | null
+          type: string
+          updated_at: string | null
+          user_id: string | null
+          vaccination_status: string | null
+        }
+        Insert: {
+          adoption_fee?: number | null
+          age?: string | null
+          breed?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          energy_level?: string | null
+          gender?: string | null
+          good_with_kids?: boolean | null
+          good_with_pets?: boolean | null
+          health_status?: string | null
+          id?: string
+          images?: string[] | null
+          location?: string | null
+          name: string
+          size?: string | null
+          spayed_neutered?: boolean | null
+          status?: string | null
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+          vaccination_status?: string | null
+        }
+        Update: {
+          adoption_fee?: number | null
+          age?: string | null
+          breed?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          energy_level?: string | null
+          gender?: string | null
+          good_with_kids?: boolean | null
+          good_with_pets?: boolean | null
+          health_status?: string | null
+          id?: string
+          images?: string[] | null
+          location?: string | null
+          name?: string
+          size?: string | null
+          spayed_neutered?: boolean | null
+          status?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+          vaccination_status?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          location: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          location?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

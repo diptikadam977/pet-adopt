@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Share2, Star } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Share2, MapPin, Calendar, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface PetProfileProps {
   onBack: () => void;
@@ -16,45 +17,83 @@ interface PetProfileProps {
 
 export function PetProfile({ onBack, onAdopt, onChat, petId }: PetProfileProps) {
   const [pet, setPet] = useState<any>(null);
-  const [owner, setOwner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchPetDetails();
+    fetchPet();
   }, [petId]);
 
-  const fetchPetDetails = async () => {
+  const fetchPet = async () => {
     try {
-      const { data: petData, error: petError } = await supabase
+      const { data, error } = await supabase
         .from('pets')
         .select('*')
         .eq('id', petId)
         .single();
 
-      if (petError) throw petError;
-      setPet(petData);
-
-      if (petData.user_id) {
-        const { data: ownerData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', petData.user_id)
-          .single();
-        
-        setOwner(ownerData);
-      }
+      if (error) throw error;
+      setPet(data);
     } catch (error) {
-      console.error('Error fetching pet details:', error);
+      console.error('Error fetching pet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load pet details",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAdopt = () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to send adoption requests",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (pet.user_id === user.id) {
+      toast({
+        title: "Can't Adopt Your Own Pet",
+        description: "You cannot send an adoption request for your own pet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onAdopt(pet);
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Adopt ${pet.name}`,
+          text: `Check out ${pet.name}, a ${pet.breed} looking for a loving home!`,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link Copied!",
+          description: "Pet profile link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-primary"></div>
       </div>
     );
   }
@@ -62,107 +101,171 @@ export function PetProfile({ onBack, onAdopt, onChat, petId }: PetProfileProps) 
   if (!pet) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Pet not found</p>
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-primary mb-2">Pet Not Found</h2>
+          <Button onClick={onBack}>Go Back</Button>
+        </div>
       </div>
     );
   }
 
-  const tags = [
-    pet.good_with_kids && '#Good with Kids',
-    pet.good_with_pets && '#Good with Pets',
-    pet.spayed_neutered && '#Spayed/Neutered',
-    `#${pet.energy_level} Energy`,
-    `#${pet.vaccination_status}`,
-  ].filter(Boolean);
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="relative">
         <img 
           src={pet.images?.[0] || '/placeholder.svg'} 
           alt={pet.name}
-          className="w-full h-64 sm:h-80 object-cover"
+          className="w-full h-80 object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/placeholder.svg';
+          }}
         />
-        <div className="absolute top-12 left-4 right-4 sm:left-6 sm:right-6 flex justify-between">
-          <Button variant="ghost" size="icon" onClick={onBack} className="bg-background/80 rounded-full w-8 h-8 sm:w-10 sm:h-10">
-            <ArrowLeft className="w-4 h-4 sm:w-6 sm:h-6" />
+        
+        {/* Header Actions */}
+        <div className="absolute top-12 left-4 right-4 flex justify-between items-center">
+          <Button variant="ghost" size="icon" onClick={onBack} className="bg-white/80 backdrop-blur-sm">
+            <ArrowLeft className="w-6 h-6" />
           </Button>
-          <Button variant="ghost" size="icon" className="bg-background/80 rounded-full w-8 h-8 sm:w-10 sm:h-10">
-            <Share2 className="w-4 h-4 sm:w-6 sm:h-6" />
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsLiked(!isLiked)}
+              className="bg-white/80 backdrop-blur-sm"
+            >
+              <Heart className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleShare}
+              className="bg-white/80 backdrop-blur-sm"
+            >
+              <Share2 className="w-6 h-6" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Status Badge */}
+        <div className="absolute bottom-4 right-4">
+          <Badge className={`${
+            pet.status === 'available' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-orange-500 text-white'
+          }`}>
+            {pet.status.charAt(0).toUpperCase() + pet.status.slice(1)}
+          </Badge>
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 py-6 space-y-6">
-        {/* Pet Basic Info */}
+      <div className="p-4 space-y-6">
+        {/* Pet Info */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">{pet.name}</h1>
-          <p className="text-base sm:text-lg text-warm-gray-dark mb-4">
-            {pet.age} · {pet.breed} · {pet.gender} · {pet.size}
-          </p>
-          <p className="text-xl font-bold text-orange-primary">${pet.adoption_fee}</p>
+          <div className="flex justify-between items-start mb-2">
+            <h1 className="text-2xl font-bold text-primary">{pet.name}</h1>
+            <span className="text-2xl font-bold text-orange-primary">${pet.adoption_fee}</span>
+          </div>
+          <p className="text-warm-gray-dark text-lg">{pet.breed} • {pet.age} • {pet.gender}</p>
+          <div className="flex items-center gap-1 text-warm-gray-dark mt-1">
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm">{pet.location}</span>
+          </div>
         </div>
 
-        {/* Owner Info */}
-        {owner && (
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-primary mb-3">About the owner</h2>
-            <div className="flex items-center gap-4">
-              <Avatar className="w-12 h-12 sm:w-16 sm:h-16">
-                <AvatarFallback>{owner.full_name?.charAt(0) || 'U'}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold text-primary text-sm sm:text-base">{owner.full_name || 'Pet Owner'}</h3>
-                <p className="text-warm-gray-dark text-xs sm:text-sm">{owner.location || pet.location}</p>
+        {/* Quick Info */}
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="rounded-xl">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-warm-gray-dark">Size</p>
+              <p className="font-semibold text-primary">{pet.size}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-xl">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-warm-gray-dark">Energy</p>
+              <p className="font-semibold text-primary">{pet.energy_level}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-xl">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-warm-gray-dark">Color</p>
+              <p className="font-semibold text-primary">{pet.color}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* About */}
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <h3 className="font-bold text-primary mb-2">About {pet.name}</h3>
+            <p className="text-warm-gray-dark leading-relaxed">{pet.description}</p>
+          </CardContent>
+        </Card>
+
+        {/* Health & Behavior */}
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <h3 className="font-bold text-primary mb-3">Health & Behavior</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Shield className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-warm-gray-dark">Health: {pet.health_status}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Shield className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-warm-gray-dark">Vaccinations: {pet.vaccination_status}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-purple-500" />
+                <span className="text-sm text-warm-gray-dark">
+                  Spayed/Neutered: {pet.spayed_neutered ? 'Yes' : 'No'}
+                </span>
               </div>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
 
-        {/* Pet Story */}
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-primary mb-3">{pet.name}'s story</h2>
-          <p className="text-warm-gray-dark leading-relaxed mb-4 text-sm sm:text-base">
-            {pet.description || `${pet.name} is a wonderful ${pet.type} looking for a loving home. This ${pet.age} old ${pet.breed} has a ${pet.energy_level.toLowerCase()} energy level and would make a great addition to the right family.`}
-          </p>
-          
-          {/* Health Info */}
-          <div className="bg-warm-gray/10 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold text-primary mb-2">Health Information</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <p><span className="font-medium">Health:</span> {pet.health_status}</p>
-              <p><span className="font-medium">Vaccinated:</span> {pet.vaccination_status}</p>
-              <p><span className="font-medium">Spayed/Neutered:</span> {pet.spayed_neutered ? 'Yes' : 'No'}</p>
-              <p><span className="font-medium">Energy Level:</span> {pet.energy_level}</p>
+        {/* Compatibility */}
+        <Card className="rounded-2xl">
+          <CardContent className="p-4">
+            <h3 className="font-bold text-primary mb-3">Good With</h3>
+            <div className="flex gap-2 flex-wrap">
+              {pet.good_with_kids && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Kids
+                </Badge>
+              )}
+              {pet.good_with_pets && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  Other Pets
+                </Badge>
+              )}
+              {!pet.good_with_kids && !pet.good_with_pets && (
+                <span className="text-sm text-warm-gray-dark">No specific compatibility info</span>
+              )}
             </div>
-          </div>
-          
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="rounded-full px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Action Buttons */}
-        {user && (
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 pb-20">
-            <Button 
-              onClick={() => onAdopt(pet)}
-              className="flex-1 bg-orange-primary hover:bg-orange-secondary text-primary-foreground py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg"
-            >
-              Adopt Me
-            </Button>
-            <Button 
+        {pet.status === 'available' && (
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 border-orange-primary text-orange-primary hover:bg-orange-light"
               onClick={onChat}
-              variant="outline" 
-              className="flex-1 border-orange-primary text-orange-primary hover:bg-orange-light py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg"
             >
-              Chat with Owner
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Message Owner
+            </Button>
+            <Button
+              onClick={handleAdopt}
+              className="flex-1 bg-orange-primary hover:bg-orange-secondary text-white"
+            >
+              <Heart className="w-4 h-4 mr-2" />
+              Request Adoption
             </Button>
           </div>
         )}

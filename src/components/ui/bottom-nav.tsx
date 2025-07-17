@@ -4,11 +4,11 @@ import { Home, Search, Plus, Heart, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  currentScreen: string;
+  onScreenChange: (screen: string) => void;
 }
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export function BottomNav({ currentScreen, onScreenChange }: BottomNavProps) {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'search', label: 'Search', icon: Search },
@@ -23,10 +23,10 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => onTabChange(id)}
+            onClick={() => onScreenChange(id)}
             className={cn(
               "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-0 flex-1",
-              activeTab === id 
+              currentScreen === id 
                 ? "text-orange-primary" 
                 : "text-warm-gray-dark hover:text-orange-secondary"
             )}

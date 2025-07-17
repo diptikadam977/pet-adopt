@@ -8,11 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { usePets } from '@/hooks/usePets';
 
 interface SearchScreenProps {
-  onBack: () => void;
-  onPetClick: (petId: string) => void;
+  onBack?: () => void;
+  onPetSelect: (petId: string) => void;
 }
 
-export function SearchScreen({ onBack, onPetClick }: SearchScreenProps) {
+export function SearchScreen({ onBack, onPetSelect }: SearchScreenProps) {
   const { pets, loading } = usePets();
   const [activeTypeFilter, setActiveTypeFilter] = useState('all');
   const [activeAgeFilter, setActiveAgeFilter] = useState('all');
@@ -43,9 +43,11 @@ export function SearchScreen({ onBack, onPetClick }: SearchScreenProps) {
       {/* Header */}
       <div className="bg-background px-4 sm:px-6 pt-12 pb-4 border-b border-warm-gray">
         <div className="flex items-center gap-4 mb-4">
-          <Button variant="ghost" size="icon" onClick={onBack} className="w-8 h-8">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          {onBack && (
+            <Button variant="ghost" size="icon" onClick={onBack} className="w-8 h-8">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
           <h1 className="text-lg sm:text-xl font-bold text-primary flex-1">Find your pet</h1>
           <SlidersHorizontal className="w-5 h-5 text-warm-gray-dark" />
         </div>
@@ -117,7 +119,7 @@ export function SearchScreen({ onBack, onPetClick }: SearchScreenProps) {
               <Card 
                 key={pet.id}
                 className="cursor-pointer hover:shadow-lg transition-shadow rounded-2xl overflow-hidden"
-                onClick={() => onPetClick(pet.id)}
+                onClick={() => onPetSelect(pet.id)}
               >
                 <div className="aspect-square">
                   <img 

@@ -27,15 +27,29 @@ export function useMessages(conversationId?: string, receiverId?: string) {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender_profile:sender_id (full_name, profile_photo)
-        `)
+        .select('*')
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${user.id})`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+
+      // Get sender profiles for messages
+      const messagesWithProfiles = await Promise.all(
+        (data || []).map(async (message) => {
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('full_name, profile_photo')
+            .eq('id', message.sender_id)
+            .single();
+
+          return {
+            ...message,
+            sender_profile: senderProfile
+          };
+        })
+      );
+
+      setMessages(messagesWithProfiles);
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {

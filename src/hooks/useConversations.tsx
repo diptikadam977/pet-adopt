@@ -33,19 +33,49 @@ export function useConversations() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First get conversations
+      const { data: conversationsData, error: conversationsError } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          pets:pet_id (name, images),
-          owner_profile:owner_id (full_name, profile_photo),
-          interested_profile:interested_user_id (full_name, profile_photo)
-        `)
+        .select('*')
         .or(`owner_id.eq.${user.id},interested_user_id.eq.${user.id}`)
         .order('last_message_at', { ascending: false });
 
-      if (error) throw error;
-      setConversations(data || []);
+      if (conversationsError) throw conversationsError;
+
+      // Get additional data for each conversation
+      const conversationsWithData = await Promise.all(
+        (conversationsData || []).map(async (conversation) => {
+          // Get pet data
+          const { data: petData } = await supabase
+            .from('pets')
+            .select('name, images')
+            .eq('id', conversation.pet_id)
+            .single();
+
+          // Get owner profile
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('full_name, profile_photo')
+            .eq('id', conversation.owner_id)
+            .single();
+
+          // Get interested user profile
+          const { data: interestedProfile } = await supabase
+            .from('profiles')
+            .select('full_name, profile_photo')
+            .eq('id', conversation.interested_user_id)
+            .single();
+
+          return {
+            ...conversation,
+            pets: petData,
+            owner_profile: ownerProfile,
+            interested_profile: interestedProfile
+          };
+        })
+      );
+
+      setConversations(conversationsWithData);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {

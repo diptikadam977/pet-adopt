@@ -37,7 +37,7 @@ function AppContent() {
 
   // Show auth screen if not authenticated
   if (!user && !loading) {
-    return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
+    return <AuthScreen />;
   }
 
   // Show loading while checking auth
@@ -108,7 +108,6 @@ function AppContent() {
           <AdoptionRequestScreen
             pet={adoptionPet}
             onBack={() => setCurrentScreen('pet-profile')}
-            onSuccess={() => setCurrentScreen('home')}
           />
         ) : null;
       default:

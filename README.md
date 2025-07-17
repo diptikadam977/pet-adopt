@@ -206,14 +206,14 @@ This project was developed as a **college submission** to showcase full-stack we
 ## 🚀 Deployment & Setup
 
 ### **Live Demo**
-- **Website**: [Your Vercel URL]
+- **Website**: [[https://pawhomesi.vercel.app]
 - **PWA**: Installable from browser
 - **Mobile**: Responsive on all devices
 
 ### **Local Development Setup**
 ```bash
 # Clone the repository
-git clone [your-repo-url]
+git clone [https://github.com/diptikadam977/paws-home-reimaginedyour-]
 
 # Install dependencies
 npm install

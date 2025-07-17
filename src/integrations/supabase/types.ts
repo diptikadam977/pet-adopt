@@ -55,6 +55,79 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          interested_user_id: string
+          last_message_at: string | null
+          owner_id: string
+          pet_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interested_user_id: string
+          last_message_at?: string | null
+          owner_id: string
+          pet_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interested_user_id?: string
+          last_message_at?: string | null
+          owner_id?: string
+          pet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          pet_id: string | null
+          receiver_id: string
+          sender_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          pet_id?: string | null
+          receiver_id: string
+          sender_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          pet_id?: string | null
+          receiver_id?: string
+          sender_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pets: {
         Row: {
           adoption_fee: number | null
@@ -139,6 +212,7 @@ export type Database = {
           id: string
           location: string | null
           phone: string | null
+          profile_photo: string | null
           updated_at: string | null
         }
         Insert: {
@@ -149,6 +223,7 @@ export type Database = {
           id: string
           location?: string | null
           phone?: string | null
+          profile_photo?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -159,6 +234,7 @@ export type Database = {
           id?: string
           location?: string | null
           phone?: string | null
+          profile_photo?: string | null
           updated_at?: string | null
         }
         Relationships: []

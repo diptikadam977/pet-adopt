@@ -1,93 +1,152 @@
-import React from 'react';
-import { Search, SlidersHorizontal, Heart, Dog, Cat, Fish } from 'lucide-react';
+
+import React, { useState } from 'react';
+import { Search, MessageCircle, Bell, MapPin, Heart, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { usePets } from '@/hooks/usePets';
+
 interface HomeScreenProps {
-  onPetClick: (petId: string) => void;
-  onAddPet: () => void;
-  onSearch: () => void;
-  onAuth: () => void;
+  onPetSelect: (petId: string) => void;
+  onNavigateToMessages: () => void;
 }
-export function HomeScreen({
-  onPetClick,
-  onAddPet,
-  onSearch,
-  onAuth
-}: HomeScreenProps) {
-  const {
-    pets,
-    loading
-  } = usePets();
-  const featuredPets = pets.slice(0, 4);
-  return <div className="min-h-screen bg-background pb-20">
+
+export function HomeScreen({ onPetSelect, onNavigateToMessages }: HomeScreenProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const { pets, loading } = usePets();
+
+  const filteredPets = pets.filter(pet =>
+    pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pet.breed.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pet.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-gradient-peach px-4 sm:px-6 pt-12 pb-6 rounded bg-gray-800">
+      <div className="bg-background px-6 pt-12 pb-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">Paws & Homes</h1>
-          
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Find Your Perfect</h1>
+            <h2 className="text-2xl font-bold text-orange-primary">Companion</h2>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onNavigateToMessages}
+              className="rounded-full"
+            >
+              <MessageCircle className="w-6 h-6" />
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Bell className="w-6 h-6" />
+            </Button>
+          </div>
         </div>
-        
+
         {/* Search Bar */}
         <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-warm-gray-dark" />
-          <Input placeholder="Search by breed, type, or location" className="pl-10 sm:pl-12 py-3 bg-background border-warm-gray rounded-2xl text-sm sm:text-base" onClick={onSearch} readOnly />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-warm-gray-dark w-5 h-5" />
+          <Input
+            placeholder="Search for pets, breeds, or locations..."
+            className="pl-12 pr-12 py-3 rounded-2xl border-warm-gray bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Button size="icon" variant="ghost" className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl">
+            <Filter className="w-5 h-5" />
+          </Button>
         </div>
-        
-        {/* Category Filters */}
-        <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-2">
-          <Button variant="secondary" className="flex items-center gap-2 bg-background rounded-2xl px-4 sm:px-6 whitespace-nowrap">
-            <Dog className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">Dogs</span>
-          </Button>
-          <Button variant="secondary" className="flex items-center gap-2 bg-background rounded-2xl px-4 sm:px-6 whitespace-nowrap">
-            <Cat className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">Cats</span>
-          </Button>
-          <Button variant="secondary" className="flex items-center gap-2 bg-background rounded-2xl px-4 sm:px-6 whitespace-nowrap">
-            <Fish className="w-4 h-4" />
-            <span className="text-xs sm:text-sm">Other</span>
-          </Button>
+
+        {/* Categories */}
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+          {['All', 'Dogs', 'Cats', 'Birds', 'Rabbits'].map((category) => (
+            <Button
+              key={category}
+              variant={category === 'All' ? 'default' : 'outline'}
+              className={`rounded-full whitespace-nowrap ${
+                category === 'All' 
+                  ? 'bg-orange-primary text-white hover:bg-orange-secondary' 
+                  : 'border-warm-gray text-warm-gray-dark hover:bg-orange-light'
+              }`}
+            >
+              {category}
+            </Button>
+          ))}
         </div>
       </div>
 
       {/* Featured Pets */}
-      <div className="px-4 sm:px-6 py-6">
-        <h2 className="text-lg sm:text-xl font-bold text-primary mb-4">Featured Pets</h2>
-        
-        {loading ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            {[1, 2, 3, 4].map(i => <Card key={i} className="rounded-2xl overflow-hidden animate-pulse">
-                <div className="w-full h-40 sm:h-48 bg-warm-gray/20" />
-                <CardContent className="p-3 sm:p-4">
-                  <div className="h-4 bg-warm-gray/20 rounded mb-2" />
-                  <div className="h-3 bg-warm-gray/20 rounded" />
-                </CardContent>
-              </Card>)}
-          </div> : <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            {featuredPets.map(pet => <Card key={pet.id} className="cursor-pointer hover:shadow-lg transition-shadow rounded-2xl overflow-hidden" onClick={() => onPetClick(pet.id)}>
-                <div className="relative">
-                  <img src={pet.images?.[0] || '/placeholder.svg'} alt={pet.name} className="w-full h-40 sm:h-48 object-cover" />
-                  <Button variant="ghost" size="icon" className="absolute top-3 right-3 bg-background/80 hover:bg-background rounded-full w-8 h-8 sm:w-10 sm:h-10">
-                    <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </Button>
+      <div className="px-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-primary">Available Pets</h3>
+          <Button variant="ghost" className="text-orange-primary">
+            See all
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {filteredPets.map((pet) => (
+            <Card 
+              key={pet.id} 
+              className="rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              onClick={() => onPetSelect(pet.id)}
+            >
+              <div className="relative">
+                <img 
+                  src={pet.images[0]} 
+                  alt={pet.name}
+                  className="w-full h-40 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
+                >
+                  <Heart className="w-4 h-4" />
+                </Button>
+                <Badge className="absolute bottom-2 left-2 bg-white/90 text-primary">
+                  {pet.age}
+                </Badge>
+              </div>
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-primary mb-1">{pet.name}</h4>
+                <p className="text-sm text-warm-gray-dark mb-2">{pet.breed}</p>
+                <div className="flex items-center gap-1 text-warm-gray-dark mb-2">
+                  <MapPin className="w-3 h-3" />
+                  <span className="text-xs">{pet.location}</span>
                 </div>
-                <CardContent className="p-3 sm:p-4">
-                  <h3 className="font-bold text-base sm:text-lg text-primary">{pet.name}</h3>
-                  <p className="text-sm text-warm-gray-dark">{pet.breed}, {pet.age}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-sm text-warm-gray-dark">{pet.location}</p>
-                    <p className="text-orange-primary font-semibold">${pet.adoption_fee}</p>
-                  </div>
-                </CardContent>
-              </Card>)}
-          </div>}
-        
-        {/* List Your Pet CTA */}
-        <Button onClick={onAddPet} className="w-full bg-orange-primary hover:bg-orange-secondary text-primary-foreground py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg">
-          List Your Pet
-        </Button>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-orange-primary">${pet.adoption_fee}</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                    Available
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredPets.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-warm-gray-dark">No pets found matching your search.</p>
+          </div>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 }

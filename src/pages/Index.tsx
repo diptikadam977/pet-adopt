@@ -1,192 +1,146 @@
 
-import React, { useState, useEffect } from 'react';
-import { SplashScreen } from '@/components/splash-screen';
-import { AuthScreen } from '@/components/auth/auth-screen';
+import React, { useState } from 'react';
 import { HomeScreen } from '@/components/home-screen';
 import { SearchScreen } from '@/components/search-screen';
 import { PetProfile } from '@/components/pet-profile';
-import { AddPetScreen } from '@/components/add-pet-screen';
 import { ProfileScreen } from '@/components/profile-screen';
 import { ChatScreen } from '@/components/chat-screen';
+import { ConversationsScreen } from '@/components/conversations-screen';
+import { AuthScreen } from '@/components/auth/auth-screen';
 import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { SplashScreen } from '@/components/splash-screen';
 
-type Screen = 
-  | 'splash'
-  | 'auth'
-  | 'home'
-  | 'search'
-  | 'pet-profile'
-  | 'add-pet'
-  | 'profile'
-  | 'chat'
-  | 'adoption-request';
+type Screen = 'splash' | 'auth' | 'home' | 'search' | 'profile' | 'pet-profile' | 'chat' | 'conversations' | 'adopt';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
-  const [activeTab, setActiveTab] = useState('home');
   const [selectedPetId, setSelectedPetId] = useState<string>('');
-  const [selectedPet, setSelectedPet] = useState<any>(null);
+  const [chatData, setChatData] = useState<{
+    conversationId: string;
+    otherUserId: string;
+    petName: string;
+    petId: string;
+  } | null>(null);
+  const [adoptionPet, setAdoptionPet] = useState<any>(null);
   const { user, loading } = useAuth();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
-    }
-  }, []);
+  // Show splash screen initially
+  if (currentScreen === 'splash') {
+    return (
+      <SplashScreen 
+        onComplete={() => setCurrentScreen(user ? 'home' : 'auth')} 
+      />
+    );
+  }
 
-  const handleSplashComplete = () => {
-    setCurrentScreen('home');
-  };
+  // Show auth screen if not authenticated
+  if (!user && !loading) {
+    return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
+  }
 
-  const handleAuth = () => {
-    setCurrentScreen('auth');
-  };
-
-  const handleTabChange = (tab: string) => {
-    if (tab === 'profile' && !user) {
-      setCurrentScreen('auth');
-      return;
-    }
-    
-    setActiveTab(tab);
-    switch (tab) {
-      case 'home':
-        setCurrentScreen('home');
-        break;
-      case 'search':
-        setCurrentScreen('search');
-        break;
-      case 'add':
-        if (!user) {
-          setCurrentScreen('auth');
-        } else {
-          setCurrentScreen('add-pet');
-        }
-        break;
-      case 'profile':
-        setCurrentScreen('profile');
-        break;
-    }
-  };
-
-  const handlePetClick = (petId: string) => {
-    setSelectedPetId(petId);
-    setCurrentScreen('pet-profile');
-  };
-
-  const handleAddPetSubmit = () => {
-    setCurrentScreen('home');
-    setActiveTab('home');
-    toast({
-      title: "Pet listed successfully!",
-      description: "Your pet has been added to the platform.",
-    });
-  };
-
-  const handleAdopt = (pet: any) => {
-    if (!user) {
-      setCurrentScreen('auth');
-      return;
-    }
-    setSelectedPet(pet);
-    setCurrentScreen('adoption-request');
-  };
-
-  const handleChat = () => {
-    setCurrentScreen('chat');
-  };
-
-  const handleBack = () => {
-    if (currentScreen === 'search' || currentScreen === 'pet-profile' || 
-        currentScreen === 'add-pet' || currentScreen === 'profile' || 
-        currentScreen === 'chat' || currentScreen === 'adoption-request') {
-      setCurrentScreen('home');
-      setActiveTab('home');
-    } else if (currentScreen === 'auth') {
-      setCurrentScreen('home');
-    }
-  };
-
+  // Show loading while checking auth
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-primary"></div>
       </div>
     );
   }
 
+  const handlePetSelect = (petId: string) => {
+    setSelectedPetId(petId);
+    setCurrentScreen('pet-profile');
+  };
+
+  const handleChatOpen = (conversationId: string, otherUserId: string, petName: string, petId: string) => {
+    setChatData({ conversationId, otherUserId, petName, petId });
+    setCurrentScreen('chat');
+  };
+
+  const handleAdoptionRequest = (pet: any) => {
+    setAdoptionPet(pet);
+    setCurrentScreen('adopt');
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'splash':
-        return <SplashScreen onComplete={handleSplashComplete} />;
-      case 'auth':
-        return <AuthScreen onBack={handleBack} />;
       case 'home':
         return (
           <HomeScreen 
-            onPetClick={handlePetClick}
-            onAddPet={() => user ? setCurrentScreen('add-pet') : handleAuth()}
-            onSearch={() => setCurrentScreen('search')}
-            onAuth={handleAuth}
+            onPetSelect={handlePetSelect}
+            onNavigateToMessages={() => setCurrentScreen('conversations')}
           />
         );
       case 'search':
-        return <SearchScreen onBack={handleBack} onPetClick={handlePetClick} />;
+        return <SearchScreen onPetSelect={handlePetSelect} />;
+      case 'profile':
+        return <ProfileScreen onBack={() => setCurrentScreen('home')} />;
       case 'pet-profile':
         return (
-          <PetProfile 
-            onBack={handleBack} 
-            onAdopt={handleAdopt} 
-            onChat={handleChat}
+          <PetProfile
             petId={selectedPetId}
+            onBack={() => setCurrentScreen('home')}
+            onAdopt={handleAdoptionRequest}
+            onChat={handleChatOpen}
           />
         );
-      case 'add-pet':
-        return <AddPetScreen onBack={handleBack} onSubmit={handleAddPetSubmit} />;
-      case 'profile':
-        return <ProfileScreen onBack={handleBack} />;
+      case 'conversations':
+        return (
+          <ConversationsScreen
+            onBack={() => setCurrentScreen('home')}
+            onOpenChat={handleChatOpen}
+          />
+        );
       case 'chat':
-        return <ChatScreen onBack={handleBack} />;
-      case 'adoption-request':
-        return (
-          <AdoptionRequestScreen 
-            onBack={handleBack} 
-            pet={selectedPet}
+        return chatData ? (
+          <ChatScreen
+            onBack={() => setCurrentScreen('conversations')}
+            conversationId={chatData.conversationId}
+            otherUserId={chatData.otherUserId}
+            petName={chatData.petName}
+            petId={chatData.petId}
           />
-        );
+        ) : null;
+      case 'adopt':
+        return adoptionPet ? (
+          <AdoptionRequestScreen
+            pet={adoptionPet}
+            onBack={() => setCurrentScreen('pet-profile')}
+            onSuccess={() => setCurrentScreen('home')}
+          />
+        ) : null;
       default:
-        return (
-          <HomeScreen 
-            onPetClick={handlePetClick}
-            onAddPet={() => user ? setCurrentScreen('add-pet') : handleAuth()}
-            onSearch={() => setCurrentScreen('search')}
-            onAuth={handleAuth}
-          />
-        );
+        return <HomeScreen onPetSelect={handlePetSelect} onNavigateToMessages={() => setCurrentScreen('conversations')} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       {renderScreen()}
-      {!['splash', 'auth', 'chat', 'adoption-request'].includes(currentScreen) && (
-        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      
+      {/* Bottom Navigation */}
+      {!['chat', 'pet-profile', 'adopt'].includes(currentScreen) && (
+        <BottomNav
+          currentScreen={currentScreen === 'conversations' ? 'profile' : currentScreen}
+          onScreenChange={(screen) => {
+            if (screen === 'profile') {
+              setCurrentScreen('profile');
+            } else {
+              setCurrentScreen(screen as Screen);
+            }
+          }}
+        />
       )}
     </div>
   );
 }
 
-const Index = () => {
+export default function Index() {
   return (
     <AuthProvider>
       <AppContent />
     </AuthProvider>
   );
-};
-
-export default Index;
+}

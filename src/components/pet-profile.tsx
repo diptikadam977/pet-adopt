@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { useConversations } from '@/hooks/useConversations';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface PetProfileProps {
   onBack: () => void;
   onAdopt: (pet: any) => void;
-  onChat: () => void;
+  onChat: (conversationId: string, otherUserId: string, petName: string, petId: string) => void;
   petId: string;
 }
 
@@ -20,6 +21,7 @@ export function PetProfile({ onBack, onAdopt, onChat, petId }: PetProfileProps) 
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const { user } = useAuth();
+  const { createConversation } = useConversations();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,6 +70,46 @@ export function PetProfile({ onBack, onAdopt, onChat, petId }: PetProfileProps) 
     }
 
     onAdopt(pet);
+  };
+
+  const handleChat = async () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to start a conversation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pet.user_id === user.id) {
+      toast({
+        title: "Can't Message Yourself",
+        description: "You cannot message yourself about your own pet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const conversationId = await createConversation(pet.id, pet.user_id);
+      if (conversationId) {
+        onChat(conversationId, pet.user_id, pet.name, pet.id);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to start conversation",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start conversation",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = async () => {
@@ -250,12 +292,12 @@ export function PetProfile({ onBack, onAdopt, onChat, petId }: PetProfileProps) 
         </Card>
 
         {/* Action Buttons */}
-        {pet.status === 'available' && (
+        {pet.status === 'available' && pet.user_id !== user?.id && (
           <div className="flex gap-3">
             <Button
               variant="outline"
               className="flex-1 border-orange-primary text-orange-primary hover:bg-orange-light"
-              onClick={onChat}
+              onClick={handleChat}
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               Message Owner

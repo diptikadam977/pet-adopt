@@ -1,69 +1,64 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, Image, Mic, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-interface Message {
-  id: string;
-  sender: 'user' | 'other';
-  content: string;
-  timestamp: string;
-}
+import { useMessages } from '@/hooks/useMessages';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ChatScreenProps {
   onBack: () => void;
+  conversationId: string;
+  otherUserId: string;
+  petName: string;
+  petId: string;
 }
 
-export function ChatScreen({ onBack }: ChatScreenProps) {
+export function ChatScreen({ onBack, conversationId, otherUserId, petName, petId }: ChatScreenProps) {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: 'other',
-      content: "Hi there! I'm really interested in adopting Max. Could you tell me a bit more about his personality and temperament?",
-      timestamp: 'Today 10:23 AM'
-    },
-    {
-      id: '2',
-      sender: 'user',
-      content: "Hi Sophie! Max is a very friendly and playful dog. He loves to run and play fetch, but he also enjoys cuddling on the couch. He's great with kids and other dogs, but he can be a bit shy around new people at first.",
-      timestamp: 'Today 10:25 AM'
-    },
-    {
-      id: '3',
-      sender: 'other',
-      content: "That sounds wonderful! Does he have any special needs or health concerns I should be aware of?",
-      timestamp: 'Today 10:27 AM'
-    },
-    {
-      id: '4',
-      sender: 'user',
-      content: "He's generally very healthy, but he does have a sensitive stomach, so he needs to be on a specific diet. I can provide you with the details if you'd like.",
-      timestamp: 'Today 10:30 AM'
-    }
-  ]);
+  const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
+  const { messages, sendMessage } = useMessages(conversationId, otherUserId);
+  const { user } = useAuth();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const otherUser = {
-    name: 'Sophie',
-    avatar: '/lovable-uploads/8eb06a14-cd33-44d7-871d-b5780d546175.png'
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const currentUser = {
-    name: 'Liam',
-    avatar: '/lovable-uploads/809569e1-bc95-4f34-a5d1-4ad64c00cdf3.png'
-  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    const fetchOtherUserProfile = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, profile_photo')
+          .eq('id', otherUserId)
+          .single();
+        
+        setOtherUserProfile(data);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchOtherUserProfile();
+  }, [otherUserId]);
+
+  const handleSendMessage = async () => {
     if (message.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        sender: 'user',
-        content: message,
-        timestamp: 'Now'
-      };
-      setMessages([...messages, newMessage]);
+      await sendMessage(message, petId);
       setMessage('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
     }
   };
 
@@ -75,74 +70,92 @@ export function ChatScreen({ onBack }: ChatScreenProps) {
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <Avatar className="w-10 h-10">
-          <AvatarImage src={otherUser.avatar} alt={otherUser.name} />
-          <AvatarFallback>S</AvatarFallback>
+          <AvatarImage src={otherUserProfile?.profile_photo} alt={otherUserProfile?.full_name} />
+          <AvatarFallback className="bg-orange-light text-orange-primary">
+            {otherUserProfile?.full_name?.charAt(0) || 'U'}
+          </AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h1 className="text-lg font-semibold text-primary">{otherUser.name}</h1>
+          <h1 className="text-lg font-semibold text-primary">{otherUserProfile?.full_name || 'User'}</h1>
+          <p className="text-sm text-warm-gray-dark">About {petName}</p>
         </div>
         <Heart className="w-6 h-6 text-warm-gray-dark" />
       </div>
 
       {/* Messages */}
       <div className="flex-1 px-6 py-4 space-y-4 overflow-y-auto">
-        <div className="text-center">
-          <p className="text-sm text-warm-gray-dark">Today 10:23 AM</p>
-        </div>
-        
-        {messages.map((msg) => (
-          <div key={msg.id}>
-            <div className="text-sm text-warm-gray-dark mb-1">
-              {msg.sender === 'other' ? otherUser.name : ''}
-            </div>
-            <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
-              {msg.sender === 'other' && (
-                <Avatar className="w-8 h-8 mr-2 mt-2">
-                  <AvatarImage src={otherUser.avatar} alt={otherUser.name} />
-                  <AvatarFallback>S</AvatarFallback>
-                </Avatar>
-              )}
-              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                msg.sender === 'user' 
-                  ? 'bg-orange-primary text-white' 
-                  : 'bg-warm-gray/30 text-primary'
-              }`}>
-                <p className="text-sm">{msg.content}</p>
-              </div>
-              {msg.sender === 'user' && (
-                <Avatar className="w-8 h-8 ml-2 mt-2">
-                  <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                  <AvatarFallback>L</AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-            <div className={`text-xs text-warm-gray-dark ${msg.sender === 'user' ? 'text-right mr-10' : 'text-left ml-10'}`}>
-              {msg.sender === 'user' ? 'Liam' : ''}
-            </div>
+        {messages.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-warm-gray-dark">Start your conversation about {petName}!</p>
           </div>
-        ))}
+        ) : (
+          messages.map((msg) => (
+            <div key={msg.id}>
+              <div className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'} mb-2`}>
+                {msg.sender_id !== user?.id && (
+                  <Avatar className="w-8 h-8 mr-2 mt-2">
+                    <AvatarImage src={otherUserProfile?.profile_photo} alt={otherUserProfile?.full_name} />
+                    <AvatarFallback className="bg-orange-light text-orange-primary">
+                      {otherUserProfile?.full_name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
+                  msg.sender_id === user?.id
+                    ? 'bg-orange-primary text-white' 
+                    : 'bg-warm-gray/30 text-primary'
+                }`}>
+                  <p className="text-sm">{msg.content}</p>
+                </div>
+                {msg.sender_id === user?.id && (
+                  <Avatar className="w-8 h-8 ml-2 mt-2">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} alt="You" />
+                    <AvatarFallback className="bg-orange-light text-orange-primary">
+                      {user?.email?.charAt(0) || 'Y'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+              <div className={`text-xs text-warm-gray-dark ${msg.sender_id === user?.id ? 'text-right mr-10' : 'text-left ml-10'}`}>
+                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
       <div className="px-6 py-4 border-t border-warm-gray bg-background">
         <div className="flex items-center gap-2">
           <Avatar className="w-8 h-8">
-            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-            <AvatarFallback>L</AvatarFallback>
+            <AvatarImage src={user?.user_metadata?.avatar_url} alt="You" />
+            <AvatarFallback className="bg-orange-light text-orange-primary">
+              {user?.email?.charAt(0) || 'Y'}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 flex items-center gap-2 bg-warm-gray/20 rounded-full px-4 py-2">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Message"
+              placeholder={`Message about ${petName}...`}
               className="border-0 bg-transparent focus:ring-0 focus:ring-offset-0"
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyPress={handleKeyPress}
             />
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Image className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Mic className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={handleSendMessage}
+              disabled={!message.trim()}
+            >
+              <Send className="w-4 h-4" />
             </Button>
           </div>
         </div>

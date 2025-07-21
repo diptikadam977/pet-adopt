@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthScreenProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export function AuthScreen({ onBack }: AuthScreenProps) {
@@ -56,9 +56,12 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
     <div className="min-h-screen bg-gradient-peach flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pt-12">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="w-6 h-6" />
-        </Button>
+        {onBack && (
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+        )}
+        {!onBack && <div className="w-10" />}
         <div className="flex items-center gap-2">
           <Heart className="w-6 h-6 text-orange-primary" />
           <span className="text-lg font-bold text-primary">Paws & Homes</span>

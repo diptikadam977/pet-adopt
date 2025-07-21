@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { HomeScreen } from '@/components/home-screen';
 import { SearchScreen } from '@/components/search-screen';
@@ -11,8 +10,9 @@ import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { SplashScreen } from '@/components/splash-screen';
+import { AddPetScreen } from '@/components/add-pet-screen';
 
-type Screen = 'splash' | 'auth' | 'home' | 'search' | 'profile' | 'pet-profile' | 'chat' | 'conversations' | 'adopt';
+type Screen = 'splash' | 'auth' | 'home' | 'search' | 'profile' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'add-pet';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
@@ -64,6 +64,10 @@ function AppContent() {
     setCurrentScreen('adopt');
   };
 
+  const handleAddPet = () => {
+    setCurrentScreen('add-pet');
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
@@ -71,6 +75,7 @@ function AppContent() {
           <HomeScreen 
             onPetSelect={handlePetSelect}
             onNavigateToMessages={() => setCurrentScreen('conversations')}
+            onAddPet={handleAddPet}
           />
         );
       case 'search':
@@ -110,8 +115,15 @@ function AppContent() {
             onBack={() => setCurrentScreen('pet-profile')}
           />
         ) : null;
+      case 'add-pet':
+        return (
+          <AddPetScreen
+            onBack={() => setCurrentScreen('home')}
+            onSubmit={() => setCurrentScreen('home')}
+          />
+        );
       default:
-        return <HomeScreen onPetSelect={handlePetSelect} onNavigateToMessages={() => setCurrentScreen('conversations')} />;
+        return <HomeScreen onPetSelect={handlePetSelect} onNavigateToMessages={() => setCurrentScreen('conversations')} onAddPet={handleAddPet} />;
     }
   };
 
@@ -120,7 +132,7 @@ function AppContent() {
       {renderScreen()}
       
       {/* Bottom Navigation */}
-      {!['chat', 'pet-profile', 'adopt'].includes(currentScreen) && (
+      {!['chat', 'pet-profile', 'adopt', 'add-pet'].includes(currentScreen) && (
         <BottomNav
           currentScreen={currentScreen === 'conversations' ? 'profile' : currentScreen}
           onScreenChange={(screen) => {

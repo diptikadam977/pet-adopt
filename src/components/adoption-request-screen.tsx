@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,8 +81,12 @@ export function AdoptionRequestScreen({ onBack, pet }: AdoptionRequestScreenProp
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
+          <Heart className="w-16 h-16 text-orange-primary mx-auto mb-4" />
           <h2 className="text-xl font-bold text-primary mb-2">Pet Not Found</h2>
-          <Button onClick={onBack}>Go Back</Button>
+          <p className="text-warm-gray-dark mb-4">The pet you're looking for doesn't exist.</p>
+          <Button onClick={onBack} className="bg-orange-primary hover:bg-orange-secondary text-white">
+            Go Back
+          </Button>
         </div>
       </div>
     );
@@ -91,7 +95,7 @@ export function AdoptionRequestScreen({ onBack, pet }: AdoptionRequestScreenProp
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-background px-4 pt-12 pb-4 border-b sticky top-0 z-10">
+      <div className="bg-background px-4 pt-12 pb-4 border-b sticky top-0 z-10 border-warm-gray/30">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft className="w-6 h-6" />
@@ -102,39 +106,47 @@ export function AdoptionRequestScreen({ onBack, pet }: AdoptionRequestScreenProp
 
       <div className="p-4 space-y-6 pb-20">
         {/* Pet Info Card */}
-        <Card className="rounded-2xl overflow-hidden">
-          <CardContent className="p-4">
+        <Card className="rounded-2xl overflow-hidden border-warm-gray/30">
+          <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <img 
                 src={pet.images?.[0] || '/placeholder.svg'} 
                 alt={pet.name}
-                className="w-20 h-20 rounded-xl object-cover"
+                className="w-24 h-24 rounded-2xl object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = '/placeholder.svg';
                 }}
               />
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-primary">{pet.name}</h3>
-                <p className="text-warm-gray-dark">{pet.breed} • {pet.age}</p>
-                <p className="text-warm-gray-dark">{pet.location}</p>
-                <p className="text-orange-primary font-semibold text-lg">
-                  ${pet.adoption_fee}
-                </p>
+                <h3 className="text-xl font-bold text-primary">{pet.name}</h3>
+                <p className="text-warm-gray-dark text-sm">{pet.breed} • {pet.age} • {pet.gender}</p>
+                <p className="text-warm-gray-dark text-sm">{pet.location}</p>
+                <div className="mt-2">
+                  {pet.adoption_fee === 0 ? (
+                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                      Free Adoption
+                    </span>
+                  ) : (
+                    <span className="text-orange-primary font-bold text-lg">
+                      ${pet.adoption_fee}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Request Form */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl border-warm-gray/30">
           <CardHeader>
-            <CardTitle className="text-primary">
-              Tell us why you'd be perfect for {pet.name}
+            <CardTitle className="text-xl text-primary">
+              Why are you perfect for {pet.name}?
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-primary mb-2">
                   Your Message *
@@ -144,18 +156,18 @@ export function AdoptionRequestScreen({ onBack, pet }: AdoptionRequestScreenProp
                   placeholder="Share your experience with pets, living situation, and why you're interested in adopting this pet. Include details about your home, family, and how you plan to care for your new companion..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="min-h-32 resize-none"
+                  className="min-h-40 resize-none rounded-2xl bg-warm-gray/20 border-warm-gray"
                   required
                   disabled={loading}
                 />
-                <p className="text-xs text-warm-gray-dark mt-1">
+                <p className="text-xs text-warm-gray-dark mt-2">
                   Please provide detailed information to help the owner make their decision.
                 </p>
               </div>
               
               <Button
                 type="submit"
-                className="w-full bg-orange-primary hover:bg-orange-secondary text-white font-semibold py-3"
+                className="w-full bg-orange-primary hover:bg-orange-secondary text-white font-semibold py-3 rounded-2xl"
                 disabled={loading || !message.trim()}
               >
                 {loading ? (
@@ -175,17 +187,29 @@ export function AdoptionRequestScreen({ onBack, pet }: AdoptionRequestScreenProp
         </Card>
 
         {/* Info Card */}
-        <Card className="rounded-2xl bg-orange-light border-orange-secondary">
-          <CardContent className="p-4">
-            <h3 className="font-semibold text-orange-secondary mb-2">
+        <Card className="rounded-2xl bg-orange-light border-orange-secondary/30">
+          <CardContent className="p-6">
+            <h3 className="font-bold text-orange-secondary mb-3 text-lg">
               What happens next?
             </h3>
-            <ul className="text-sm text-warm-gray-dark space-y-1">
-              <li>• Your request will be sent to the pet owner</li>
-              <li>• They will review your message and profile</li>
-              <li>• You'll be notified of their decision</li>
-              <li>• If approved, you can arrange to meet the pet</li>
-            </ul>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-orange-primary rounded-full"></div>
+                <p className="text-sm text-warm-gray-dark">Your request will be sent to the pet owner</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-orange-primary rounded-full"></div>
+                <p className="text-sm text-warm-gray-dark">They will review your message and profile</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-orange-primary rounded-full"></div>
+                <p className="text-sm text-warm-gray-dark">You'll be notified of their decision</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-orange-primary rounded-full"></div>
+                <p className="text-sm text-warm-gray-dark">If approved, you can arrange to meet the pet</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, Heart, PawPrint, Settings, User, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { useFavorites } from '@/hooks/useFavorites';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EnhancedProfileScreenProps {
   onBack: () => void;
@@ -12,11 +14,46 @@ interface EnhancedProfileScreenProps {
 
 export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScreenProps) {
   const { user, signOut } = useAuth();
+  const { favorites } = useFavorites();
+  const [profile, setProfile] = useState<any>(null);
+  const [adoptedCount, setAdoptedCount] = useState(0);
 
-  const statsData = [
-    { label: 'Pets Adopted', value: '12' },
-    { label: 'Pets Fostered', value: '3' }
-  ];
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        setProfile(data);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    const fetchAdoptedCount = async () => {
+      if (!user) return;
+
+      try {
+        const { count } = await supabase
+          .from('adoption_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('requester_id', user.id)
+          .eq('status', 'approved');
+
+        setAdoptedCount(count || 0);
+      } catch (error) {
+        console.error('Error fetching adopted count:', error);
+      }
+    };
+
+    fetchProfile();
+    fetchAdoptedCount();
+  }, [user]);
 
   const activityItems = [
     { 
@@ -54,6 +91,19 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
     }
   ];
 
+  const getUserDisplayName = () => {
+    if (profile?.full_name) return profile.full_name;
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    return user?.email?.split('@')[0] || 'User';
+  };
+
+  const getUserProfileImage = () => {
+    if (profile?.profile_photo) return profile.profile_photo;
+    if (user?.user_metadata?.avatar_url) return user.user_metadata.avatar_url;
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -67,35 +117,36 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
 
         {/* Profile Info */}
         <div className="text-center mb-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-orange-light to-orange-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/0c0dbf2c-9788-4d51-a399-ce189a687b72.png"
-              alt="Profile"
-              className="w-20 h-20 rounded-full object-cover"
-            />
+          <div className="w-24 h-24 bg-gradient-to-br from-orange-light to-orange-primary rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
+            {getUserProfileImage() ? (
+              <img 
+                src={getUserProfileImage()}
+                alt="Profile"
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <User className="w-12 h-12 text-white" />
+            )}
           </div>
-          <h2 className="text-2xl font-bold text-primary">Olivia</h2>
-          <p className="text-warm-gray-dark">San Francisco, CA</p>
+          <h2 className="text-2xl font-bold text-primary">{getUserDisplayName()}</h2>
+          <p className="text-warm-gray-dark">{profile?.location || user?.email}</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          {statsData.map((stat, index) => (
-            <Card key={index} className="rounded-2xl">
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
-                <div className="text-warm-gray-dark text-sm">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
+          <Card className="rounded-2xl">
+            <CardContent className="p-6 text-center">
+              <div className="text-3xl font-bold text-primary mb-1">{adoptedCount}</div>
+              <div className="text-warm-gray-dark text-sm">Pets Adopted</div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-2xl">
+            <CardContent className="p-6 text-center">
+              <div className="text-3xl font-bold text-primary mb-1">{favorites.length}</div>
+              <div className="text-warm-gray-dark text-sm">Favorites</div>
+            </CardContent>
+          </Card>
         </div>
-
-        <Card className="rounded-2xl mb-6">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-primary mb-1">2</div>
-            <div className="text-warm-gray-dark text-sm">Favorites</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* My Activity Section */}
@@ -147,6 +198,21 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
               </CardContent>
             </Card>
           ))}
+          
+          {/* Logout Button */}
+          <Card className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow bg-red-50">
+            <CardContent className="p-4" onClick={signOut}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <ArrowLeft className="w-6 h-6 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-red-600">Sign Out</h4>
+                  <p className="text-red-400 text-sm">Log out of your account</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

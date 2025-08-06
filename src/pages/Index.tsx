@@ -8,6 +8,9 @@ import { EnhancedAddPetScreen } from '@/components/enhanced-add-pet-screen';
 import { EnhancedProfileScreen } from '@/components/enhanced-profile-screen';
 import { ProfileSettingsScreen } from '@/components/profile/profile-settings-screen';
 import { HelpSupportScreen } from '@/components/profile/help-support-screen';
+import { ApplicationsScreen } from '@/components/applications-screen';
+import { FavoritesScreen } from '@/components/favorites-screen';
+import { AdoptionHistoryScreen } from '@/components/adoption-history-screen';
 import { PetProfile } from '@/components/pet-profile';
 import { ChatScreen } from '@/components/chat-screen';
 import { ConversationsScreen } from '@/components/conversations-screen';
@@ -16,7 +19,7 @@ import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 
-type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'settings' | 'help';
+type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'settings' | 'help' | 'applications' | 'favorites' | 'history';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -89,6 +92,15 @@ function AppContent() {
       case 'help':
         setCurrentScreen('help');
         break;
+      case 'applications':
+        setCurrentScreen('applications');
+        break;
+      case 'favorites':
+        setCurrentScreen('favorites');
+        break;
+      case 'history':
+        setCurrentScreen('history');
+        break;
       default:
         console.log('Navigate to:', screen);
     }
@@ -136,6 +148,25 @@ function AppContent() {
       case 'help':
         return (
           <HelpSupportScreen
+            onBack={() => setCurrentScreen('profile')}
+          />
+        );
+      case 'applications':
+        return (
+          <ApplicationsScreen
+            onBack={() => setCurrentScreen('profile')}
+          />
+        );
+      case 'favorites':
+        return (
+          <FavoritesScreen
+            onBack={() => setCurrentScreen('profile')}
+            onPetSelect={handlePetSelect}
+          />
+        );
+      case 'history':
+        return (
+          <AdoptionHistoryScreen
             onBack={() => setCurrentScreen('profile')}
           />
         );
@@ -194,7 +225,7 @@ function AppContent() {
       {renderScreen()}
       
       {/* Bottom Navigation */}
-      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings', 'settings', 'help'].includes(currentScreen) && (
+      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings', 'settings', 'help', 'applications', 'favorites', 'history'].includes(currentScreen) && (
         <BottomNav
           currentScreen={currentScreen}
           onScreenChange={(screen) => setCurrentScreen(screen as Screen)}

@@ -1,151 +1,116 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Heart, MapPin, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface PetAd {
-  id: string;
-  name: string;
-  breed: string;
-  age: string;
-  location: string;
-  image: string;
-  adoption_fee: number;
-  featured: boolean;
-}
+import { Badge } from '@/components/ui/badge';
+import { Pet } from '@/hooks/usePets';
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface PetAdsCarouselProps {
+  pets: Pet[];
   onPetSelect: (petId: string) => void;
 }
 
-export function PetAdsCarousel({ onPetSelect }: PetAdsCarouselProps) {
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const [featuredPets] = useState<PetAd[]>([
-    {
-      id: '1',
-      name: 'Buddy',
-      breed: 'Golden Retriever',
-      age: '2 years',
-      location: 'San Francisco',
-      image: '/lovable-uploads/42a710fd-3b12-47a8-ae84-16cdc38bba0f.png',
-      adoption_fee: 0,
-      featured: true
-    },
-    {
-      id: '2',
-      name: 'Luna',
-      breed: 'Persian Cat',
-      age: '1 year',
-      location: 'Oakland',
-      image: '/lovable-uploads/8eb06a14-cd33-44d7-871d-b5780d546175.png',
-      adoption_fee: 150,
-      featured: true
-    },
-    {
-      id: '3',
-      name: 'Max',
-      breed: 'German Shepherd',
-      age: '3 years',
-      location: 'Berkeley',
-      image: '/lovable-uploads/e0629f7a-170b-453b-8dd8-d2f5cef5c027.png',
-      adoption_fee: 200,
-      featured: true
-    },
-    {
-      id: '4',
-      name: 'Mittens',
-      breed: 'Maine Coon',
-      age: '6 months',
-      location: 'San Jose',
-      image: '/lovable-uploads/809569e1-bc95-4f34-a5d1-4ad64c00cdf3.png',
-      adoption_fee: 0,
-      featured: true
+export function PetAdsCarousel({ pets, onPetSelect }: PetAdsCarouselProps) {
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+
+  const handleFavoriteToggle = async (petId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFavorite(petId)) {
+      await removeFavorite(petId);
+    } else {
+      await addFavorite(petId);
     }
-  ]);
+  };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentAdIndex((prevIndex) => 
-        (prevIndex + 1) % featuredPets.length
-      );
-    }, 4000); // Change ad every 4 seconds
-
-    return () => clearInterval(interval);
-  }, [featuredPets.length]);
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
 
   return (
-    <div className="mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-primary">Featured Pets</h2>
-        <div className="flex gap-1">
-          {featuredPets.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentAdIndex ? 'bg-orange-primary' : 'bg-warm-gray/40'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="relative overflow-hidden">
-        <div 
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${currentAdIndex * 100}%)` }}
-        >
-          {featuredPets.map((pet) => (
-            <div key={pet.id} className="w-full flex-shrink-0 px-1">
-              <Card 
-                className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-orange-light/20 to-warm-gray/10"
-                onClick={() => onPetSelect(pet.id)}
-              >
-                <div className="relative">
-                  <img 
-                    src={pet.image} 
-                    alt={pet.name}
-                    className="w-full h-48 object-cover"
+    <div className="px-6">
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+        {pets.map((pet) => (
+          <Card 
+            key={pet.id}
+            className="min-w-[280px] rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => onPetSelect(pet.id)}
+          >
+            <CardContent className="p-0">
+              <div className="relative">
+                <img
+                  src={pet.images?.[0] || '/placeholder.svg'}
+                  alt={pet.name}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {/* Favorite Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-3 right-3 h-8 w-8 bg-white/90 hover:bg-white"
+                  onClick={(e) => handleFavoriteToggle(pet.id, e)}
+                >
+                  <Heart 
+                    className={`w-4 h-4 ${isFavorite(pet.id) ? 'fill-red-500 text-red-500' : 'text-warm-gray-dark'}`} 
                   />
-                  <div className="absolute top-3 left-3">
-                    <Badge className="bg-orange-primary text-white font-bold">
-                      FEATURED
-                    </Badge>
-                  </div>
-                  {pet.adoption_fee === 0 && (
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-green-500 text-white font-bold">
-                        FREE
-                      </Badge>
+                </Button>
+
+                {/* Free Badge */}
+                {pet.adoption_fee === 0 && (
+                  <Badge className="absolute top-3 left-3 bg-green-500 text-white">
+                    FREE
+                  </Badge>
+                )}
+
+                {/* Pet Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <h3 className="text-xl font-bold mb-1">{pet.name}</h3>
+                  <p className="text-sm opacity-90 mb-2">{pet.breed} • {pet.age} • {pet.gender}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm">{pet.location}</span>
                     </div>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute bottom-3 right-3 bg-white/80 hover:bg-white"
-                  >
-                    <Heart className="w-5 h-5" />
-                  </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span className="text-xs">{getTimeAgo(pet.created_at)}</span>
+                      </div>
+                      {pet.adoption_fee > 0 && (
+                        <span className="text-lg font-bold">${pet.adoption_fee}</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-primary text-lg">{pet.name}</h3>
-                      <p className="text-warm-gray-dark text-sm">{pet.breed} • {pet.age}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-orange-primary font-bold text-lg">
-                        {pet.adoption_fee === 0 ? 'FREE' : `$${pet.adoption_fee}`}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-warm-gray-dark text-xs">{pet.location}</p>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </div>
+              </div>
+              
+              {/* Additional Info */}
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-xs">
+                    {pet.energy_level} Energy
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {pet.size}
+                  </Badge>
+                </div>
+                <p className="text-sm text-warm-gray-dark line-clamp-2">
+                  {pet.description}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

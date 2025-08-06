@@ -26,7 +26,7 @@ export function EnhancedHomeScreen({
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Find your pet</h1>
+            <h1 className="text-2xl font-bold text-primary">Find your pew</h1>
             <p className="text-warm-gray-dark">Discover loving companions near you</p>
           </div>
           <div className="flex items-center gap-2">

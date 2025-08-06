@@ -1,21 +1,23 @@
+
 import React, { useState } from 'react';
-import { HomeScreen } from '@/components/home-screen';
+import { OnboardingScreen } from '@/components/onboarding-screen';
+import { EnhancedHomeScreen } from '@/components/enhanced-home-screen';
 import { SearchScreen } from '@/components/search-screen';
+import { MyListingsScreen } from '@/components/my-listings-screen';
+import { EnhancedAddPetScreen } from '@/components/enhanced-add-pet-screen';
+import { EnhancedProfileScreen } from '@/components/enhanced-profile-screen';
 import { PetProfile } from '@/components/pet-profile';
-import { ProfileScreen } from '@/components/profile-screen';
 import { ChatScreen } from '@/components/chat-screen';
 import { ConversationsScreen } from '@/components/conversations-screen';
 import { AuthScreen } from '@/components/auth/auth-screen';
 import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
-import { SplashScreen } from '@/components/splash-screen';
-import { AddPetScreen } from '@/components/add-pet-screen';
 
-type Screen = 'splash' | 'auth' | 'home' | 'search' | 'profile' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'add-pet';
+type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt';
 
 function AppContent() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [selectedPetId, setSelectedPetId] = useState<string>('');
   const [chatData, setChatData] = useState<{
     conversationId: string;
@@ -26,10 +28,10 @@ function AppContent() {
   const [adoptionPet, setAdoptionPet] = useState<any>(null);
   const { user, loading } = useAuth();
 
-  // Show splash screen initially
-  if (currentScreen === 'splash') {
+  // Show onboarding screen initially
+  if (currentScreen === 'onboarding') {
     return (
-      <SplashScreen 
+      <OnboardingScreen 
         onComplete={() => setCurrentScreen(user ? 'home' : 'auth')} 
       />
     );
@@ -64,24 +66,40 @@ function AppContent() {
     setCurrentScreen('adopt');
   };
 
-  const handleAddPet = () => {
-    setCurrentScreen('add-pet');
-  };
-
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return (
-          <HomeScreen 
-            onPetSelect={handlePetSelect}
-            onNavigateToMessages={() => setCurrentScreen('conversations')}
-            onAddPet={handleAddPet}
-          />
-        );
+        return <EnhancedHomeScreen onPetSelect={handlePetSelect} />;
       case 'search':
         return <SearchScreen onPetSelect={handlePetSelect} />;
+      case 'add':
+        return (
+          <MyListingsScreen
+            onBack={() => setCurrentScreen('home')}
+            onAddPet={() => setCurrentScreen('add-pet')}
+            onPetSelect={handlePetSelect}
+          />
+        );
+      case 'requests':
+        return (
+          <ConversationsScreen
+            onBack={() => setCurrentScreen('home')}
+            onOpenChat={handleChatOpen}
+          />
+        );
       case 'profile':
-        return <ProfileScreen onBack={() => setCurrentScreen('home')} />;
+        return (
+          <EnhancedProfileScreen
+            onBack={() => setCurrentScreen('home')}
+          />
+        );
+      case 'add-pet':
+        return (
+          <EnhancedAddPetScreen
+            onBack={() => setCurrentScreen('add')}
+            onSubmit={() => setCurrentScreen('add')}
+          />
+        );
       case 'pet-profile':
         return (
           <PetProfile
@@ -94,7 +112,7 @@ function AppContent() {
       case 'conversations':
         return (
           <ConversationsScreen
-            onBack={() => setCurrentScreen('home')}
+            onBack={() => setCurrentScreen('requests')}
             onOpenChat={handleChatOpen}
           />
         );
@@ -115,15 +133,8 @@ function AppContent() {
             onBack={() => setCurrentScreen('pet-profile')}
           />
         ) : null;
-      case 'add-pet':
-        return (
-          <AddPetScreen
-            onBack={() => setCurrentScreen('home')}
-            onSubmit={() => setCurrentScreen('home')}
-          />
-        );
       default:
-        return <HomeScreen onPetSelect={handlePetSelect} onNavigateToMessages={() => setCurrentScreen('conversations')} onAddPet={handleAddPet} />;
+        return <EnhancedHomeScreen onPetSelect={handlePetSelect} />;
     }
   };
 
@@ -132,16 +143,10 @@ function AppContent() {
       {renderScreen()}
       
       {/* Bottom Navigation */}
-      {!['chat', 'pet-profile', 'adopt', 'add-pet'].includes(currentScreen) && (
+      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings'].includes(currentScreen) && (
         <BottomNav
-          currentScreen={currentScreen === 'conversations' ? 'profile' : currentScreen}
-          onScreenChange={(screen) => {
-            if (screen === 'profile') {
-              setCurrentScreen('profile');
-            } else {
-              setCurrentScreen(screen as Screen);
-            }
-          }}
+          currentScreen={currentScreen}
+          onScreenChange={(screen) => setCurrentScreen(screen as Screen)}
         />
       )}
     </div>

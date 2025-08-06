@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { OnboardingScreen } from '@/components/onboarding-screen';
 import { EnhancedHomeScreen } from '@/components/enhanced-home-screen';
-import { SearchScreen } from '@/components/search-screen';
+import { EnhancedSearchScreen } from '@/components/enhanced-search-screen';
 import { MyListingsScreen } from '@/components/my-listings-screen';
 import { EnhancedAddPetScreen } from '@/components/enhanced-add-pet-screen';
 import { EnhancedProfileScreen } from '@/components/enhanced-profile-screen';
+import { ProfileSettingsScreen } from '@/components/profile/profile-settings-screen';
+import { HelpSupportScreen } from '@/components/profile/help-support-screen';
 import { PetProfile } from '@/components/pet-profile';
 import { ChatScreen } from '@/components/chat-screen';
 import { ConversationsScreen } from '@/components/conversations-screen';
@@ -14,7 +16,7 @@ import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 
-type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt';
+type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'settings' | 'help';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -27,6 +29,19 @@ function AppContent() {
   } | null>(null);
   const [adoptionPet, setAdoptionPet] = useState<any>(null);
   const { user, loading } = useAuth();
+
+  // Register service worker for PWA
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('SW registered: ', registration);
+        })
+        .catch((registrationError) => {
+          console.log('SW registration failed: ', registrationError);
+        });
+    }
+  }, []);
 
   // Show onboarding screen initially
   if (currentScreen === 'onboarding') {
@@ -66,12 +81,30 @@ function AppContent() {
     setCurrentScreen('adopt');
   };
 
+  const handleProfileNavigate = (screen: string) => {
+    switch (screen) {
+      case 'settings':
+        setCurrentScreen('settings');
+        break;
+      case 'help':
+        setCurrentScreen('help');
+        break;
+      default:
+        console.log('Navigate to:', screen);
+    }
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <EnhancedHomeScreen onPetSelect={handlePetSelect} />;
+        return (
+          <EnhancedHomeScreen 
+            onPetSelect={handlePetSelect}
+            onSearch={() => setCurrentScreen('search')}
+          />
+        );
       case 'search':
-        return <SearchScreen onPetSelect={handlePetSelect} />;
+        return <EnhancedSearchScreen onPetSelect={handlePetSelect} />;
       case 'add':
         return (
           <MyListingsScreen
@@ -91,6 +124,19 @@ function AppContent() {
         return (
           <EnhancedProfileScreen
             onBack={() => setCurrentScreen('home')}
+            onNavigate={handleProfileNavigate}
+          />
+        );
+      case 'settings':
+        return (
+          <ProfileSettingsScreen
+            onBack={() => setCurrentScreen('profile')}
+          />
+        );
+      case 'help':
+        return (
+          <HelpSupportScreen
+            onBack={() => setCurrentScreen('profile')}
           />
         );
       case 'add-pet':
@@ -134,7 +180,12 @@ function AppContent() {
           />
         ) : null;
       default:
-        return <EnhancedHomeScreen onPetSelect={handlePetSelect} />;
+        return (
+          <EnhancedHomeScreen 
+            onPetSelect={handlePetSelect}
+            onSearch={() => setCurrentScreen('search')}
+          />
+        );
     }
   };
 
@@ -143,7 +194,7 @@ function AppContent() {
       {renderScreen()}
       
       {/* Bottom Navigation */}
-      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings'].includes(currentScreen) && (
+      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings', 'settings', 'help'].includes(currentScreen) && (
         <BottomNav
           currentScreen={currentScreen}
           onScreenChange={(screen) => setCurrentScreen(screen as Screen)}

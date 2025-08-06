@@ -7,9 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface EnhancedProfileScreenProps {
   onBack: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
-export function EnhancedProfileScreen({ onBack }: EnhancedProfileScreenProps) {
+export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScreenProps) {
   const { user, signOut } = useAuth();
 
   const statsData = [
@@ -18,14 +19,39 @@ export function EnhancedProfileScreen({ onBack }: EnhancedProfileScreenProps) {
   ];
 
   const activityItems = [
-    { icon: FileText, title: 'Applications', subtitle: 'View your adoption applications' },
-    { icon: Heart, title: 'Favorites', subtitle: 'Manage your saved pets' },
-    { icon: PawPrint, title: 'Adoption History', subtitle: 'View your adoption history' }
+    { 
+      icon: FileText, 
+      title: 'Applications', 
+      subtitle: 'View your adoption applications',
+      action: () => onNavigate?.('applications')
+    },
+    { 
+      icon: Heart, 
+      title: 'Favorites', 
+      subtitle: 'Manage your saved pets',
+      action: () => onNavigate?.('favorites')
+    },
+    { 
+      icon: PawPrint, 
+      title: 'Adoption History', 
+      subtitle: 'View your adoption history',
+      action: () => onNavigate?.('history')
+    }
   ];
 
   const settingsItems = [
-    { icon: User, title: 'Account', subtitle: 'Manage your account settings' },
-    { icon: HelpCircle, title: 'Help', subtitle: 'Get help with the app' }
+    { 
+      icon: User, 
+      title: 'Account', 
+      subtitle: 'Manage your account settings',
+      action: () => onNavigate?.('settings')
+    },
+    { 
+      icon: HelpCircle, 
+      title: 'Help', 
+      subtitle: 'Get help with the app',
+      action: () => onNavigate?.('help')
+    }
   ];
 
   return (
@@ -77,7 +103,11 @@ export function EnhancedProfileScreen({ onBack }: EnhancedProfileScreenProps) {
         <h3 className="text-xl font-bold text-primary mb-4">My Activity</h3>
         <div className="space-y-4">
           {activityItems.map((item, index) => (
-            <Card key={index} className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow">
+            <Card 
+              key={index} 
+              className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
+              onClick={item.action}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-warm-gray/20 rounded-full flex items-center justify-center">
@@ -99,7 +129,11 @@ export function EnhancedProfileScreen({ onBack }: EnhancedProfileScreenProps) {
         <h3 className="text-xl font-bold text-primary mb-4">Settings</h3>
         <div className="space-y-4">
           {settingsItems.map((item, index) => (
-            <Card key={index} className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow">
+            <Card 
+              key={index} 
+              className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
+              onClick={item.action}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-warm-gray/20 rounded-full flex items-center justify-center">

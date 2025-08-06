@@ -1,130 +1,158 @@
 
-import React, { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import React from 'react';
+import { Search, Plus, MapPin, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { usePets } from '@/hooks/usePets';
+import { PetAdsCarousel } from '@/components/pet-ads/pet-ads-carousel';
 
 interface EnhancedHomeScreenProps {
   onPetSelect: (petId: string) => void;
+  onSearch?: () => void;
 }
 
-export function EnhancedHomeScreen({ onPetSelect }: EnhancedHomeScreenProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState({
-    age: '',
-    size: '',
-    breed: ''
-  });
+export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreenProps) {
   const { pets, loading } = usePets();
 
-  const filteredPets = pets.filter(pet => {
-    const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         pet.breed?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
-
-  const featuredPet = filteredPets[0];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-primary"></div>
-      </div>
-    );
-  }
+  // Get recent pets (limit to 6)
+  const recentPets = pets.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-primary">Pawsitive Match</h1>
-          <Button variant="ghost" size="icon" className="text-primary">
-            <Search className="w-6 h-6" />
-          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Find your pet</h1>
+            <p className="text-warm-gray-dark">Discover loving companions near you</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-orange-primary" />
+            <span className="text-sm text-warm-gray-dark">San Francisco</span>
+          </div>
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-4">
+        <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-warm-gray-dark" />
           <Input
-            placeholder="Search for pets"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 py-4 rounded-2xl bg-warm-gray/20 border-0 text-primary placeholder:text-warm-gray-dark"
+            placeholder="Search pets by name, breed, location..."
+            className="pl-12 py-3 bg-warm-gray/20 border-warm-gray/30 rounded-2xl cursor-pointer"
+            onClick={onSearch}
+            readOnly
           />
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex gap-3 mb-6">
-          {['Age', 'Size', 'Breeds'].map((filter) => (
-            <Button
-              key={filter}
-              variant="outline"
-              className="rounded-full px-6 py-2 bg-warm-gray/20 border-warm-gray/30 text-warm-gray-dark"
+        {/* Pet Ads Carousel */}
+        <PetAdsCarousel onPetSelect={onPetSelect} />
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Card className="rounded-2xl bg-gradient-to-r from-orange-light to-orange-primary/80">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Search className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-bold text-white mb-1">Browse Pets</h3>
+              <p className="text-white/80 text-sm">Find your perfect match</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="rounded-2xl bg-gradient-to-r from-green-400 to-green-500">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Plus className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-bold text-white mb-1">Add Pet</h3>
+              <p className="text-white/80 text-sm">Help a pet find home</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Categories */}
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+          {['All', 'Dogs', 'Cats', 'Birds', 'Fish', 'Others'].map((category) => (
+            <Badge
+              key={category}
+              variant={category === 'All' ? "default" : "secondary"}
+              className="cursor-pointer whitespace-nowrap rounded-full px-4 py-2"
             >
-              {filter}
-              <Filter className="w-4 h-4 ml-2" />
-            </Button>
+              {category}
+            </Badge>
           ))}
         </div>
       </div>
 
-      {/* Featured Pet */}
-      {featuredPet && (
-        <div className="px-6 mb-6">
-          <Card 
-            className="rounded-3xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white cursor-pointer"
-            onClick={() => onPetSelect(featuredPet.id)}
-          >
-            <CardContent className="p-0">
-              <div className="relative">
-                <img 
-                  src={featuredPet.images?.[0] || '/placeholder.svg'} 
-                  alt={featuredPet.name}
-                  className="w-full h-80 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-6 left-6">
-                  <h2 className="text-3xl font-bold mb-2">Meet {featuredPet.name}</h2>
-                  <p className="text-white/80 text-lg mb-4 max-w-xs">
-                    {featuredPet.description?.slice(0, 100)}...
-                  </p>
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-2xl px-8 py-3">
-                    Learn More
+      {/* Recent Pets */}
+      <div className="px-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-primary">Recent Pets</h2>
+          <Button variant="ghost" size="sm" className="text-orange-primary">
+            View All
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-square bg-warm-gray/20" />
+                <CardContent className="p-3">
+                  <div className="h-4 bg-warm-gray/20 rounded mb-2" />
+                  <div className="h-3 bg-warm-gray/20 rounded mb-1" />
+                  <div className="h-3 bg-warm-gray/20 rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {recentPets.map((pet) => (
+              <Card 
+                key={pet.id}
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl overflow-hidden"
+                onClick={() => onPetSelect(pet.id)}
+              >
+                <div className="aspect-square relative">
+                  <img 
+                    src={pet.images?.[0] || '/placeholder.svg'} 
+                    alt={pet.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {pet.adoption_fee === 0 && (
+                    <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      FREE
+                    </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Add to favorites:', pet.id);
+                    }}
+                  >
+                    <Heart className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Pet Grid */}
-      <div className="px-6">
-        <div className="grid grid-cols-2 gap-4">
-          {filteredPets.slice(1, 7).map((pet) => (
-            <Card 
-              key={pet.id}
-              className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => onPetSelect(pet.id)}
-            >
-              <CardContent className="p-0">
-                <img 
-                  src={pet.images?.[0] || '/placeholder.svg'} 
-                  alt={pet.name}
-                  className="w-full h-32 object-cover"
-                />
-                <div className="p-3">
-                  <h3 className="font-bold text-primary text-sm">{pet.name}</h3>
-                  <p className="text-warm-gray-dark text-xs">{pet.breed}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <CardContent className="p-3">
+                  <h3 className="font-bold text-primary text-sm mb-1">{pet.name}</h3>
+                  <p className="text-xs text-warm-gray-dark mb-1">{pet.breed}</p>
+                  <p className="text-xs text-warm-gray-dark mb-2">{pet.age}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-orange-primary">
+                      {pet.adoption_fee === 0 ? 'FREE' : `$${pet.adoption_fee}`}
+                    </span>
+                    <span className="text-xs text-warm-gray-dark">{pet.location}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

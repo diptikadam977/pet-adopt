@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Search, SlidersHorizontal, ArrowLeft, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Heart, MapPin, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,223 +7,232 @@ import { Badge } from '@/components/ui/badge';
 import { usePets } from '@/hooks/usePets';
 
 interface EnhancedSearchScreenProps {
-  onBack?: () => void;
   onPetSelect: (petId: string) => void;
+  onBack?: () => void;
 }
 
-// Real pet images for different breeds
-const getRealPetImage = (type: string, breed: string) => {
-  const petImages = {
-    'Golden Retriever': 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&crop=faces',
-    'Persian': 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop&crop=faces',
-    'Labrador Mix': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
-    'Domestic Shorthair': 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=300&fit=crop&crop=faces',
-    'German Shepherd': 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=300&fit=crop&crop=faces',
-    'Siamese': 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&crop=faces',
-    'Beagle': 'https://images.unsplash.com/photo-1505628346881-b72b27e84993?w=400&h=300&fit=crop&crop=faces',
-    'Maine Coon': 'https://images.unsplash.com/photo-1573824774092-e5b0e9b3d995?w=400&h=300&fit=crop&crop=faces',
-    'Bulldog': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
-    'Ragdoll': 'https://images.unsplash.com/photo-1606214174585-fe31582cd22c?w=400&h=300&fit=crop&crop=faces'
-  };
-
-  // Fallback images for dogs and cats
-  const fallbackImages = {
-    'Dog': 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop&crop=faces',
-    'Cat': 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop&crop=faces'
-  };
-
-  return petImages[breed as keyof typeof petImages] || fallbackImages[type as keyof typeof fallbackImages] || fallbackImages['Dog'];
-};
-
-export function EnhancedSearchScreen({ onBack, onPetSelect }: EnhancedSearchScreenProps) {
+export function EnhancedSearchScreen({ onPetSelect, onBack }: EnhancedSearchScreenProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState('All');
+  const [selectedSize, setSelectedSize] = useState('All');
+  const [favorites, setFavorites] = useState<string[]>([]);
   const { pets, loading } = usePets();
-  const [activeTypeFilter, setActiveTypeFilter] = useState('all');
-  const [activeAgeFilter, setActiveAgeFilter] = useState('all');
-  const [activePriceFilter, setActivePriceFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
-  const typeFilters = ['All', 'Dogs', 'Cats', 'Birds', 'Fish'];
-  const ageFilters = ['All', 'Young', 'Adult', 'Senior'];
-  const priceFilters = ['All', 'Free', 'Under $100', '$100-$500', 'Over $500'];
+  const toggleFavorite = (petId: string) => {
+    setFavorites(prev => 
+      prev.includes(petId) 
+        ? prev.filter(id => id !== petId)
+        : [...prev, petId]
+    );
+  };
 
   const filteredPets = pets.filter(pet => {
-    const matchesSearch = searchTerm === '' || 
-      pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pet.breed.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pet.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = activeTypeFilter === 'all' || 
-      pet.type.toLowerCase() === activeTypeFilter.toLowerCase().replace('s', '');
-    
-    const matchesAge = activeAgeFilter === 'all' || 
-      (activeAgeFilter === 'young' && (pet.age.includes('month') || pet.age.includes('1 year'))) ||
-      (activeAgeFilter === 'adult' && (pet.age.includes('2') || pet.age.includes('3') || pet.age.includes('4'))) ||
-      (activeAgeFilter === 'senior' && (pet.age.includes('5') || pet.age.includes('6') || pet.age.includes('7')));
+    const matchesSearch = pet.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          pet.breed?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = selectedType === 'All' || pet.type === selectedType;
+    const matchesSize = selectedSize === 'All' || pet.size === selectedSize;
 
-    const matchesPrice = activePriceFilter === 'all' ||
-      (activePriceFilter === 'free' && pet.adoption_fee === 0) ||
-      (activePriceFilter === 'under $100' && pet.adoption_fee > 0 && pet.adoption_fee < 100) ||
-      (activePriceFilter === '$100-$500' && pet.adoption_fee >= 100 && pet.adoption_fee <= 500) ||
-      (activePriceFilter === 'over $500' && pet.adoption_fee > 500);
-
-    return matchesSearch && matchesType && matchesAge && matchesPrice;
+    return matchesSearch && matchesType && matchesSize;
   });
 
+  const getImageUrl = (pet: any) => {
+    if (pet.images && pet.images.length > 0) {
+      return pet.images[0];
+    }
+    
+    const petType = pet.type?.toLowerCase() || 'dog';
+    const breed = pet.breed?.toLowerCase().replace(/\s+/g, '-') || '';
+    
+    const imageQueries = {
+      dog: [
+        `${breed}-dog-portrait`,
+        `${breed}-dog`,
+        'happy-dog-portrait',
+        'cute-dog-face',
+        'dog-portrait'
+      ],
+      cat: [
+        `${breed}-cat-portrait`,
+        `${breed}-cat`,
+        'cute-cat-portrait',
+        'cat-face',
+        'kitten'
+      ],
+      bird: [
+        `${breed}-bird`,
+        'colorful-bird',
+        'pet-bird',
+        'bird-portrait'
+      ],
+      rabbit: [
+        'cute-rabbit',
+        'pet-rabbit',
+        'bunny-portrait'
+      ]
+    };
+
+    const queries = imageQueries[petType as keyof typeof imageQueries] || ['pet-animal'];
+    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+    
+    return `https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400&h=300&fit=crop&crop=face&q=80&auto=format&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&q=${randomQuery}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       {/* Header */}
-      <div className="bg-background px-6 pt-12 pb-4 border-b border-warm-gray/30">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="bg-white shadow-sm border-b">
+        <div className="flex items-center gap-4 p-4">
           {onBack && (
             <Button variant="ghost" size="icon" onClick={onBack}>
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5" />
             </Button>
           )}
-          <h1 className="text-xl font-bold text-primary flex-1">Find Pets</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="w-5 h-5" />
-          </Button>
+          <h1 className="text-xl font-bold text-primary">Find Your Pet</h1>
         </div>
-        
+
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-warm-gray-dark" />
-          <Input
-            placeholder="Search pets by name, breed, location..."
-            className="pl-12 py-3 bg-warm-gray/20 border-warm-gray/30 rounded-2xl"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Filters */}
-      {showFilters && (
-        <div className="px-6 py-4 space-y-4 bg-warm-gray/10">
-          {/* Type Filters */}
-          <div>
-            <h3 className="font-semibold text-primary mb-3">Type</h3>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {typeFilters.map((type) => (
-                <Badge 
-                  key={type}
-                  variant={activeTypeFilter === type.toLowerCase() ? "default" : "secondary"}
-                  className="cursor-pointer whitespace-nowrap rounded-full px-4 py-2"
-                  onClick={() => setActiveTypeFilter(type.toLowerCase())}
-                >
-                  {type}
-                </Badge>
-              ))}
-            </div>
-          </div>
-          
-          {/* Age Filters */}
-          <div>
-            <h3 className="font-semibold text-primary mb-3">Age</h3>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {ageFilters.map((age) => (
-                <Badge 
-                  key={age}
-                  variant={activeAgeFilter === age.toLowerCase() ? "default" : "secondary"}
-                  className="cursor-pointer whitespace-nowrap rounded-full px-4 py-2"
-                  onClick={() => setActiveAgeFilter(age.toLowerCase())}
-                >
-                  {age}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Filters */}
-          <div>
-            <h3 className="font-semibold text-primary mb-3">Price</h3>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {priceFilters.map((price) => (
-                <Badge 
-                  key={price}
-                  variant={activePriceFilter === price.toLowerCase() ? "default" : "secondary"}
-                  className="cursor-pointer whitespace-nowrap rounded-full px-4 py-2"
-                  onClick={() => setActivePriceFilter(price.toLowerCase())}
-                >
-                  {price}
-                </Badge>
-              ))}
-            </div>
+        <div className="px-4 pb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-warm-gray-dark w-5 h-5" />
+            <Input
+              placeholder="Search pets by name or breed..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-12 rounded-xl bg-blue-50/50 border-blue-200"
+            />
           </div>
         </div>
-      )}
 
-      {/* Results Count */}
-      <div className="px-6 py-2">
-        <p className="text-warm-gray-dark text-sm">
-          {filteredPets.length} pets found
-        </p>
-      </div>
-
-      {/* Pet Grid */}
-      <div className="px-6">
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="rounded-2xl overflow-hidden animate-pulse">
-                <div className="aspect-square bg-warm-gray/20" />
-                <CardContent className="p-3">
-                  <div className="h-4 bg-warm-gray/20 rounded mb-2" />
-                  <div className="h-3 bg-warm-gray/20 rounded mb-1" />
-                  <div className="h-3 bg-warm-gray/20 rounded" />
-                </CardContent>
-              </Card>
+        {/* Filter Tabs */}
+        <div className="px-4 pb-4">
+          <div className="flex gap-2 mb-3 overflow-x-auto">
+            {['All', 'Dog', 'Cat', 'Bird', 'Rabbit'].map((type) => (
+              <Button
+                key={type}
+                variant={selectedType === type ? "default" : "outline"}
+                onClick={() => setSelectedType(type)}
+                className={`whitespace-nowrap rounded-full ${
+                  selectedType === type 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'border-blue-200 text-blue-600 hover:bg-blue-50'
+                }`}
+                size="sm"
+              >
+                {type}
+              </Button>
             ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {filteredPets.map((pet) => (
-              <Card 
-                key={pet.id}
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 rounded-2xl overflow-hidden"
-                onClick={() => onPetSelect(pet.id)}
+          
+          <div className="flex gap-2 overflow-x-auto">
+            {['All', 'Small', 'Medium', 'Large'].map((size) => (
+              <Button
+                key={size}
+                variant={selectedSize === size ? "default" : "outline"}
+                onClick={() => setSelectedSize(size)}
+                className={`whitespace-nowrap rounded-full ${
+                  selectedSize === size 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'border-blue-200 text-blue-600 hover:bg-blue-50'
+                }`}
+                size="sm"
               >
-                <div className="aspect-square relative">
-                  <img 
-                    src={pet.images?.[0] || getRealPetImage(pet.type, pet.breed)} 
+                {size}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="p-4">
+        <div className="mb-4">
+          <p className="text-warm-gray-dark">
+            {filteredPets.length} pets found
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPets.map((pet) => (
+            <Card key={pet.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-md bg-white">
+              <div onClick={() => onPetSelect(pet.id)}>
+                <div className="relative aspect-[4/3]">
+                  <img
+                    src={getImageUrl(pet)}
                     alt={pet.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = getRealPetImage(pet.type, pet.breed);
+                      target.src = 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400&h=300&fit=crop&q=80';
                     }}
                   />
-                  {pet.adoption_fee === 0 && (
-                    <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      FREE
-                    </div>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(pet.id);
+                    }}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 hover:bg-white"
+                  >
+                    <Heart 
+                      className={`w-4 h-4 ${
+                        favorites.includes(pet.id) 
+                          ? 'fill-red-500 text-red-500' 
+                          : 'text-gray-600'
+                      }`} 
+                    />
+                  </Button>
                 </div>
-                <CardContent className="p-3">
-                  <h3 className="font-bold text-primary text-sm mb-1">{pet.name}</h3>
-                  <p className="text-xs text-warm-gray-dark mb-1">{pet.breed}</p>
-                  <p className="text-xs text-warm-gray-dark mb-2">{pet.age}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-orange-primary">
-                      {pet.adoption_fee === 0 ? 'FREE' : `$${pet.adoption_fee}`}
-                    </span>
-                    <span className="text-xs text-warm-gray-dark">{pet.location}</span>
+              </div>
+              
+              <CardContent className="p-4" onClick={() => onPetSelect(pet.id)}>
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-lg text-primary">{pet.name}</h3>
+                    <p className="text-warm-gray-dark">{pet.breed} • {pet.age}</p>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-        
-        {!loading && filteredPets.length === 0 && (
+                  
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                      {pet.type}
+                    </Badge>
+                    <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                      {pet.size}
+                    </Badge>
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
+                      {pet.gender}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center text-sm text-warm-gray-dark">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {pet.location}
+                  </div>
+                  
+                  <p className="text-sm text-warm-gray-dark line-clamp-2">
+                    {pet.description}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredPets.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-warm-gray-dark text-lg mb-2">No pets found</p>
-            <p className="text-warm-gray-dark text-sm">Try adjusting your search filters</p>
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-primary mb-2">No pets found</h3>
+            <p className="text-warm-gray-dark">Try adjusting your search or filters</p>
           </div>
         )}
       </div>

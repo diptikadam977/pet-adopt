@@ -53,7 +53,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-peach flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pt-12">
         {onBack && (
@@ -63,7 +63,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
         )}
         {!onBack && <div className="w-10" />}
         <div className="flex items-center gap-2">
-          <Heart className="w-6 h-6 text-orange-primary" />
+          <Heart className="w-6 h-6 text-blue-600" />
           <span className="text-lg font-bold text-primary">Paws & Homes</span>
         </div>
         <div className="w-10" />
@@ -71,16 +71,19 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
 
       {/* Auth Form */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
+        <Card className="w-full max-w-md shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center space-y-4">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+              <Heart className="w-8 h-8 text-blue-600" />
+            </div>
             <CardTitle className="text-2xl font-bold text-primary">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isLogin ? 'Welcome Back' : 'Join Our Community'}
             </CardTitle>
             <p className="text-warm-gray-dark">
-              {isLogin ? 'Sign in to find your perfect pet' : 'Join our community of pet lovers'}
+              {isLogin ? 'Sign in to find your perfect pet companion' : 'Create an account to start your pet adoption journey'}
             </p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div className="relative">
@@ -90,7 +93,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                     placeholder="Full Name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-12 rounded-xl border-2 border-blue-100 focus:border-blue-500 bg-blue-50/50"
                     required
                   />
                 </div>
@@ -103,7 +106,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-12 rounded-xl border-2 border-blue-100 focus:border-blue-500 bg-blue-50/50"
                   required
                 />
               </div>
@@ -115,7 +118,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-12 rounded-xl border-2 border-blue-100 focus:border-blue-500 bg-blue-50/50"
                   required
                   minLength={6}
                 />
@@ -123,20 +126,29 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
               
               <Button
                 type="submit"
-                className="w-full bg-orange-primary hover:bg-orange-secondary"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg"
                 disabled={loading}
               >
-                {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Sign Up')}
+                {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-blue-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-warm-gray-dark">or</span>
+              </div>
+            </div>
+            
+            <div className="text-center">
               <p className="text-warm-gray-dark">
                 {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
                 <button
                   type="button"
                   onClick={() => setIsLogin(!isLogin)}
-                  className="text-orange-primary hover:text-orange-secondary font-semibold"
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline"
                 >
                   {isLogin ? 'Sign Up' : 'Sign In'}
                 </button>

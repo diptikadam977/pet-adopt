@@ -6,6 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from '@/integrations/supabase/client';
+import { ProfileSettingsScreen } from '@/components/profile/profile-settings-screen';
+import { AccountInfoScreen } from '@/components/profile/account-info-screen';
+import { PrivacySecurityScreen } from '@/components/profile/privacy-security-screen';
+import { AboutScreen } from '@/components/profile/about-screen';
+import { HelpSupportScreen } from '@/components/profile/help-support-screen';
 
 interface EnhancedProfileScreenProps {
   onBack: () => void;
@@ -17,6 +22,7 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
   const { favorites } = useFavorites();
   const [profile, setProfile] = useState<any>(null);
   const [adoptedCount, setAdoptedCount] = useState(0);
+  const [currentScreen, setCurrentScreen] = useState('main');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -55,6 +61,44 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
     fetchAdoptedCount();
   }, [user]);
 
+  const handleSettingsNavigation = (screen: string) => {
+    setCurrentScreen(screen);
+  };
+
+  const handleBackToMain = () => {
+    setCurrentScreen('main');
+  };
+
+  const handleBackToSettings = () => {
+    setCurrentScreen('settings');
+  };
+
+  // Render different screens based on currentScreen
+  if (currentScreen === 'settings') {
+    return (
+      <ProfileSettingsScreen 
+        onBack={handleBackToMain} 
+        onNavigate={handleSettingsNavigation}
+      />
+    );
+  }
+
+  if (currentScreen === 'account-info') {
+    return <AccountInfoScreen onBack={handleBackToSettings} />;
+  }
+
+  if (currentScreen === 'privacy-security') {
+    return <PrivacySecurityScreen onBack={handleBackToSettings} />;
+  }
+
+  if (currentScreen === 'about') {
+    return <AboutScreen onBack={handleBackToSettings} />;
+  }
+
+  if (currentScreen === 'help') {
+    return <HelpSupportScreen onBack={handleBackToSettings} />;
+  }
+
   const activityItems = [
     { 
       icon: FileText, 
@@ -78,16 +122,16 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
 
   const settingsItems = [
     { 
-      icon: User, 
-      title: 'Account', 
-      subtitle: 'Manage your account settings',
-      action: () => onNavigate?.('settings')
+      icon: Settings, 
+      title: 'Settings', 
+      subtitle: 'Manage app preferences and account',
+      action: () => setCurrentScreen('settings')
     },
     { 
       icon: HelpCircle, 
       title: 'Help', 
       subtitle: 'Get help with the app',
-      action: () => onNavigate?.('help')
+      action: () => setCurrentScreen('help')
     }
   ];
 

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, User, Bell, Shield, HelpCircle, Info, LogOut } from 'lucide-react';
+import { ArrowLeft, User, Bell, Shield, HelpCircle, Info, LogOut, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -8,9 +8,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ProfileSettingsScreenProps {
   onBack: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
-export function ProfileSettingsScreen({ onBack }: ProfileSettingsScreenProps) {
+export function ProfileSettingsScreen({ onBack, onNavigate }: ProfileSettingsScreenProps) {
   const { signOut } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
@@ -20,7 +21,8 @@ export function ProfileSettingsScreen({ onBack }: ProfileSettingsScreenProps) {
       icon: User,
       title: 'Account Information',
       subtitle: 'Manage your personal details',
-      action: () => console.log('Navigate to account info')
+      action: () => onNavigate?.('account-info'),
+      showArrow: true
     },
     {
       icon: Bell,
@@ -34,19 +36,22 @@ export function ProfileSettingsScreen({ onBack }: ProfileSettingsScreenProps) {
       icon: Shield,
       title: 'Privacy & Security',
       subtitle: 'Manage privacy settings',
-      action: () => console.log('Navigate to privacy')
+      action: () => onNavigate?.('privacy-security'),
+      showArrow: true
     },
     {
       icon: HelpCircle,
       title: 'Help & Support',
       subtitle: 'Get help with the app',
-      action: () => console.log('Navigate to help')
+      action: () => onNavigate?.('help'),
+      showArrow: true
     },
     {
       icon: Info,
       title: 'About',
       subtitle: 'App version and information',
-      action: () => console.log('Navigate to about')
+      action: () => onNavigate?.('about'),
+      showArrow: true
     }
   ];
 
@@ -65,7 +70,11 @@ export function ProfileSettingsScreen({ onBack }: ProfileSettingsScreenProps) {
       {/* Settings Items */}
       <div className="px-6 space-y-4">
         {settingsItems.map((item, index) => (
-          <Card key={index} className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow">
+          <Card 
+            key={index} 
+            className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
+            onClick={item.action}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-orange-light/20 rounded-full flex items-center justify-center">
@@ -80,6 +89,9 @@ export function ProfileSettingsScreen({ onBack }: ProfileSettingsScreenProps) {
                     checked={item.value}
                     onCheckedChange={item.onToggle}
                   />
+                )}
+                {item.showArrow && (
+                  <ChevronRight className="w-5 h-5 text-warm-gray-dark" />
                 )}
               </div>
             </CardContent>

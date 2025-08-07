@@ -101,7 +101,7 @@ export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreen
 
       {/* Pet Ads Carousel */}
       <div className="p-4">
-        <PetAdsCarousel />
+        <PetAdsCarousel pets={pets || []} onPetSelect={onPetSelect} />
       </div>
 
       {/* Quick Categories */}

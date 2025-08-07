@@ -12,6 +12,30 @@ interface EnhancedSearchScreenProps {
   onPetSelect: (petId: string) => void;
 }
 
+// Real pet images for different breeds
+const getRealPetImage = (type: string, breed: string) => {
+  const petImages = {
+    'Golden Retriever': 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&crop=faces',
+    'Persian': 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop&crop=faces',
+    'Labrador Mix': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
+    'Domestic Shorthair': 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=300&fit=crop&crop=faces',
+    'German Shepherd': 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=300&fit=crop&crop=faces',
+    'Siamese': 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&crop=faces',
+    'Beagle': 'https://images.unsplash.com/photo-1505628346881-b72b27e84993?w=400&h=300&fit=crop&crop=faces',
+    'Maine Coon': 'https://images.unsplash.com/photo-1573824774092-e5b0e9b3d995?w=400&h=300&fit=crop&crop=faces',
+    'Bulldog': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
+    'Ragdoll': 'https://images.unsplash.com/photo-1606214174585-fe31582cd22c?w=400&h=300&fit=crop&crop=faces'
+  };
+
+  // Fallback images for dogs and cats
+  const fallbackImages = {
+    'Dog': 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop&crop=faces',
+    'Cat': 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop&crop=faces'
+  };
+
+  return petImages[breed as keyof typeof petImages] || fallbackImages[type as keyof typeof fallbackImages] || fallbackImages['Dog'];
+};
+
 export function EnhancedSearchScreen({ onBack, onPetSelect }: EnhancedSearchScreenProps) {
   const { pets, loading } = usePets();
   const [activeTypeFilter, setActiveTypeFilter] = useState('all');
@@ -167,9 +191,13 @@ export function EnhancedSearchScreen({ onBack, onPetSelect }: EnhancedSearchScre
               >
                 <div className="aspect-square relative">
                   <img 
-                    src={pet.images?.[0] || '/placeholder.svg'} 
+                    src={pet.images?.[0] || getRealPetImage(pet.type, pet.breed)} 
                     alt={pet.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = getRealPetImage(pet.type, pet.breed);
+                    }}
                   />
                   {pet.adoption_fee === 0 && (
                     <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">

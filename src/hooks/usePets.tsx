@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { mockPets, type MockPet } from '@/data/mockPets';
 
 export interface Pet {
   id: string;
@@ -36,6 +37,7 @@ export function usePets() {
 
   const fetchPets = async () => {
     try {
+      // First try to get real data from Supabase
       const { data, error } = await supabase
         .from('pets')
         .select('*')
@@ -43,9 +45,20 @@ export function usePets() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPets(data || []);
+
+      // Combine real data with mock data for a richer experience
+      const combinedPets = [...(data || []), ...mockPets];
+      
+      // Sort by created_at to show newest first
+      const sortedPets = combinedPets.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setPets(sortedPets);
     } catch (error) {
       console.error('Error fetching pets:', error);
+      // If there's an error, fall back to mock data
+      setPets(mockPets);
     } finally {
       setLoading(false);
     }

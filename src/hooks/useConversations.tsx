@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { mockConversations, type MockConversation } from '@/data/mockPets';
 
 export interface Conversation {
   id: string;
@@ -30,7 +31,32 @@ export function useConversations() {
   const { user } = useAuth();
 
   const fetchConversations = async () => {
-    if (!user) return;
+    if (!user) {
+      // Show mock conversations for demo purposes
+      const mockConversationsFormatted = mockConversations.map(conv => ({
+        id: conv.id,
+        pet_id: conv.pet_id,
+        owner_id: conv.owner_id,
+        interested_user_id: conv.interested_user_id,
+        last_message_at: conv.last_message_at,
+        created_at: conv.created_at,
+        pets: {
+          name: conv.pet_name,
+          images: [conv.pet_image]
+        },
+        owner_profile: {
+          full_name: conv.owner_name,
+          profile_photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'
+        },
+        interested_profile: {
+          full_name: 'You',
+          profile_photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop&crop=face'
+        }
+      }));
+      setConversations(mockConversationsFormatted);
+      setLoading(false);
+      return;
+    }
 
     try {
       // First get conversations
@@ -75,9 +101,53 @@ export function useConversations() {
         })
       );
 
-      setConversations(conversationsWithData);
+      // Combine with mock data for richer experience
+      const mockConversationsFormatted = mockConversations.map(conv => ({
+        id: conv.id,
+        pet_id: conv.pet_id,
+        owner_id: conv.owner_id,
+        interested_user_id: conv.interested_user_id,
+        last_message_at: conv.last_message_at,
+        created_at: conv.created_at,
+        pets: {
+          name: conv.pet_name,
+          images: [conv.pet_image]
+        },
+        owner_profile: {
+          full_name: conv.owner_name,
+          profile_photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'
+        },
+        interested_profile: {
+          full_name: 'You',
+          profile_photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop&crop=face'
+        }
+      }));
+
+      setConversations([...conversationsWithData, ...mockConversationsFormatted]);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      // Fallback to mock data
+      const mockConversationsFormatted = mockConversations.map(conv => ({
+        id: conv.id,
+        pet_id: conv.pet_id,
+        owner_id: conv.owner_id,
+        interested_user_id: conv.interested_user_id,
+        last_message_at: conv.last_message_at,
+        created_at: conv.created_at,
+        pets: {
+          name: conv.pet_name,
+          images: [conv.pet_image]
+        },
+        owner_profile: {
+          full_name: conv.owner_name,
+          profile_photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'
+        },
+        interested_profile: {
+          full_name: 'You',
+          profile_photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop&crop=face'
+        }
+      }));
+      setConversations(mockConversationsFormatted);
     } finally {
       setLoading(false);
     }

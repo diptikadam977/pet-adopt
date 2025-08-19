@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { mockMessages, type MockMessage } from '@/data/mockPets';
 
 export interface Message {
   id: string;
@@ -22,7 +23,28 @@ export function useMessages(conversationId?: string, receiverId?: string) {
   const { user } = useAuth();
 
   const fetchMessages = async () => {
-    if (!user || !receiverId) return;
+    if (!user || !receiverId) {
+      // Show mock messages for demo
+      if (conversationId && mockMessages[conversationId]) {
+        const mockMessageData = mockMessages[conversationId].map(msg => ({
+          id: msg.id,
+          sender_id: msg.sender_id,
+          receiver_id: msg.receiver_id,
+          pet_id: msg.pet_id,
+          content: msg.content,
+          created_at: msg.created_at,
+          sender_profile: {
+            full_name: msg.sender_name,
+            profile_photo: msg.is_current_user 
+              ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop&crop=face'
+              : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'
+          }
+        }));
+        setMessages(mockMessageData);
+      }
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -49,9 +71,46 @@ export function useMessages(conversationId?: string, receiverId?: string) {
         })
       );
 
-      setMessages(messagesWithProfiles);
+      // Add mock messages for demonstration if no real messages exist
+      if (messagesWithProfiles.length === 0 && conversationId && mockMessages[conversationId]) {
+        const mockMessageData = mockMessages[conversationId].map(msg => ({
+          id: msg.id,
+          sender_id: msg.sender_id,
+          receiver_id: msg.receiver_id,
+          pet_id: msg.pet_id,
+          content: msg.content,
+          created_at: msg.created_at,
+          sender_profile: {
+            full_name: msg.sender_name,
+            profile_photo: msg.is_current_user 
+              ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop&crop=face'
+              : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'
+          }
+        }));
+        setMessages(mockMessageData);
+      } else {
+        setMessages(messagesWithProfiles);
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      // Fallback to mock messages
+      if (conversationId && mockMessages[conversationId]) {
+        const mockMessageData = mockMessages[conversationId].map(msg => ({
+          id: msg.id,
+          sender_id: msg.sender_id,
+          receiver_id: msg.receiver_id,
+          pet_id: msg.pet_id,
+          content: msg.content,
+          created_at: msg.created_at,
+          sender_profile: {
+            full_name: msg.sender_name,
+            profile_photo: msg.is_current_user 
+              ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop&crop=face'
+              : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face'
+          }
+        }));
+        setMessages(mockMessageData);
+      }
     } finally {
       setLoading(false);
     }

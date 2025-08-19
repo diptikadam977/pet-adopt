@@ -13,27 +13,47 @@ interface PetAdsCarouselProps {
 }
 
 // Real pet images for different breeds
-const getRealPetImage = (type: string, breed: string) => {
+const getPetImage = (pet: Pet) => {
+  // If the pet has images, use the first one
+  if (pet.images && pet.images.length > 0) {
+    return pet.images[0];
+  }
+
+  // Fallback images based on type and breed
   const petImages = {
-    'Golden Retriever': 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&crop=faces',
-    'Persian': 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop&crop=faces',
-    'Labrador Mix': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
-    'Domestic Shorthair': 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=300&fit=crop&crop=faces',
-    'German Shepherd': 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=300&fit=crop&crop=faces',
-    'Siamese': 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&crop=faces',
-    'Beagle': 'https://images.unsplash.com/photo-1505628346881-b72b27e84993?w=400&h=300&fit=crop&crop=faces',
-    'Maine Coon': 'https://images.unsplash.com/photo-1573824774092-e5b0e9b3d995?w=400&h=300&fit=crop&crop=faces',
-    'Bulldog': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
-    'Ragdoll': 'https://images.unsplash.com/photo-1606214174585-fe31582cd22c?w=400&h=300&fit=crop&crop=faces'
+    'Dog': {
+      'Golden Retriever': 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&crop=faces',
+      'Labrador Mix': 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400&h=300&fit=crop&crop=faces',
+      'German Shepherd': 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=300&fit=crop&crop=faces',
+      'Beagle': 'https://images.unsplash.com/photo-1505628346881-b72b27e84993?w=400&h=300&fit=crop&crop=faces',
+      'Bulldog': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
+      'default': 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop&crop=faces'
+    },
+    'Cat': {
+      'Persian': 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop&crop=faces',
+      'Siamese': 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&crop=faces',
+      'Maine Coon': 'https://images.unsplash.com/photo-1573824774092-e5b0e9b3d995?w=400&h=300&fit=crop&crop=faces',
+      'Domestic Shorthair': 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=300&fit=crop&crop=faces',
+      'Ragdoll': 'https://images.unsplash.com/photo-1606214174585-fe31582cd22c?w=400&h=300&fit=crop&crop=faces',
+      'default': 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop&crop=faces'
+    },
+    'Bird': {
+      'Cockatiel': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces',
+      'Canary': 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400&h=300&fit=crop&crop=faces',
+      'default': 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=300&fit=crop&crop=faces'
+    },
+    'Rabbit': {
+      'default': 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=300&fit=crop&crop=faces'
+    }
   };
 
-  // Fallback images for dogs and cats
-  const fallbackImages = {
-    'Dog': 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop&crop=faces',
-    'Cat': 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop&crop=faces'
-  };
+  const typeImages = petImages[pet.type as keyof typeof petImages];
+  if (typeImages) {
+    return typeImages[pet.breed as keyof typeof typeImages] || typeImages.default;
+  }
 
-  return petImages[breed as keyof typeof petImages] || fallbackImages[type as keyof typeof fallbackImages] || fallbackImages['Dog'];
+  // Ultimate fallback
+  return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop&crop=faces';
 };
 
 export function PetAdsCarousel({ pets, onPetSelect }: PetAdsCarouselProps) {
@@ -59,6 +79,14 @@ export function PetAdsCarousel({ pets, onPetSelect }: PetAdsCarouselProps) {
     return `${diffInDays}d ago`;
   };
 
+  if (!pets || pets.length === 0) {
+    return (
+      <div className="px-6 py-8 text-center">
+        <p className="text-warm-gray-dark">No pets available at the moment.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="px-6">
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -71,7 +99,7 @@ export function PetAdsCarousel({ pets, onPetSelect }: PetAdsCarouselProps) {
             <CardContent className="p-0">
               <div className="relative">
                 <img
-                  src={getRealPetImage(pet.type, pet.breed)}
+                  src={getPetImage(pet)}
                   alt={pet.name}
                   className="w-full h-48 object-cover"
                   onError={(e) => {

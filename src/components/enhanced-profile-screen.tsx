@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, FileText, Heart, PawPrint, Settings, User, HelpCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Heart, PawPrint, Settings, User, HelpCircle, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useFavorites } from '@/hooks/useFavorites';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileSettingsScreen } from '@/components/profile/profile-settings-screen';
@@ -11,6 +12,7 @@ import { AccountInfoScreen } from '@/components/profile/account-info-screen';
 import { PrivacySecurityScreen } from '@/components/profile/privacy-security-screen';
 import { AboutScreen } from '@/components/profile/about-screen';
 import { HelpSupportScreen } from '@/components/profile/help-support-screen';
+import { AdminDashboard } from '@/components/admin/admin-dashboard';
 
 interface EnhancedProfileScreenProps {
   onBack: () => void;
@@ -19,6 +21,7 @@ interface EnhancedProfileScreenProps {
 
 export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScreenProps) {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const { favorites } = useFavorites();
   const [profile, setProfile] = useState<any>(null);
   const [adoptedCount, setAdoptedCount] = useState(0);
@@ -74,6 +77,10 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
   };
 
   // Render different screens based on currentScreen
+  if (currentScreen === 'admin') {
+    return <AdminDashboard onBack={handleBackToMain} />;
+  }
+
   if (currentScreen === 'settings') {
     return (
       <ProfileSettingsScreen 
@@ -121,6 +128,12 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
   ];
 
   const settingsItems = [
+    ...(isAdmin ? [{ 
+      icon: Shield, 
+      title: 'Admin Dashboard', 
+      subtitle: 'Manage platform and users',
+      action: () => setCurrentScreen('admin')
+    }] : []),
     { 
       icon: Settings, 
       title: 'Settings', 
@@ -157,6 +170,13 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="text-xl font-bold text-primary">Profile</h1>
+          {isAdmin && (
+            <div className="ml-auto">
+              <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">
+                Admin
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Profile Info */}
@@ -226,17 +246,31 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
           {settingsItems.map((item, index) => (
             <Card 
               key={index} 
-              className="rounded-2xl cursor-pointer hover:shadow-md transition-shadow"
+              className={`rounded-2xl cursor-pointer hover:shadow-md transition-shadow ${
+                item.title === 'Admin Dashboard' ? 'bg-red-50 border-red-200' : ''
+              }`}
               onClick={item.action}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-warm-gray/20 rounded-full flex items-center justify-center">
-                    <item.icon className="w-6 h-6 text-warm-gray-dark" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    item.title === 'Admin Dashboard' ? 'bg-red-100' : 'bg-warm-gray/20'
+                  }`}>
+                    <item.icon className={`w-6 h-6 ${
+                      item.title === 'Admin Dashboard' ? 'text-red-600' : 'text-warm-gray-dark'
+                    }`} />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-primary">{item.title}</h4>
-                    <p className="text-warm-gray-dark text-sm">{item.subtitle}</p>
+                    <h4 className={`font-bold ${
+                      item.title === 'Admin Dashboard' ? 'text-red-600' : 'text-primary'
+                    }`}>
+                      {item.title}
+                    </h4>
+                    <p className={`text-sm ${
+                      item.title === 'Admin Dashboard' ? 'text-red-400' : 'text-warm-gray-dark'
+                    }`}>
+                      {item.subtitle}
+                    </p>
                   </div>
                 </div>
               </CardContent>

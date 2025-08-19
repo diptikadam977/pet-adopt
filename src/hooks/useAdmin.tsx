@@ -35,12 +35,9 @@ export function useAdmin() {
 
   const makeUserAdmin = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: userId,
-          role: 'admin'
-        });
+      const { error } = await supabase.rpc('exec_sql', {
+        query: `INSERT INTO public.user_roles (user_id, role) VALUES ('${userId}', 'admin') ON CONFLICT (user_id, role) DO NOTHING`
+      });
 
       if (error) throw error;
       return { success: true };

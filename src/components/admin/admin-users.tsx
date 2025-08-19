@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Users, Edit, Shield, Search, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,11 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface UserWithRole {
+  id: string;
+  full_name: string;
+  email: string;
+  location?: string;
+  created_at: string;
+  role: string;
+}
+
 export function AdminUsers() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editUser, setEditUser] = useState<any>(null);
+  const [editUser, setEditUser] = useState<UserWithRole | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,23 +40,35 @@ export function AdminUsers() {
 
       if (profilesError) throw profilesError;
 
-      // Get user roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
+      // Get user roles using RPC or direct query
+      const usersWithRoles = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          try {
+            const { data: hasAdmin } = await supabase
+              .rpc('has_role', { _user_id: profile.id, _role: 'admin' });
+            
+            const { data: hasModerator } = await supabase
+              .rpc('has_role', { _user_id: profile.id, _role: 'moderator' });
 
-      if (rolesError) throw rolesError;
+            let role = 'user';
+            if (hasAdmin) role = 'admin';
+            else if (hasModerator) role = 'moderator';
 
-      // Combine data
-      const usersWithRoles = profiles?.map(profile => {
-        const userRole = roles?.find(role => role.user_id === profile.id);
-        return {
-          ...profile,
-          role: userRole?.role || 'user'
-        };
-      });
+            return {
+              ...profile,
+              role
+            };
+          } catch (error) {
+            console.error('Error checking role for user:', profile.id, error);
+            return {
+              ...profile,
+              role: 'user'
+            };
+          }
+        })
+      );
 
-      setUsers(usersWithRoles || []);
+      setUsers(usersWithRoles);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -63,12 +83,14 @@ export function AdminUsers() {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: userId,
-          role: newRole
-        });
+      // Use RPC to update role safely
+      const { error } = await supabase.rpc('exec_sql', {
+        query: `
+          INSERT INTO public.user_roles (user_id, role) 
+          VALUES ('${userId}', '${newRole}') 
+          ON CONFLICT (user_id, role) DO UPDATE SET role = '${newRole}'
+        `
+      });
 
       if (error) throw error;
 
@@ -189,7 +211,7 @@ export function AdminUsers() {
               <label className="text-sm font-medium">Role</label>
               <Select 
                 defaultValue={editUser?.role}
-                onValueChange={(value) => updateUserRole(editUser?.id, value)}
+                onValueChange={(value) => editUser && updateUserRole(editUser.id, value)}
               >
                 <SelectTrigger>
                   <SelectValue />

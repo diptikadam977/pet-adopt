@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, PawPrint, FileText, BarChart3, Shield, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,13 +54,27 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
 
   const fetchStats = async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_stats')
-        .select('*')
-        .single();
+      // Fetch stats manually since admin_stats view might not be in types yet
+      const [
+        { count: totalUsers },
+        { count: availablePets },
+        { count: adoptedPets },
+        { count: pendingRequests }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('pets').select('*', { count: 'exact', head: true }).eq('status', 'available'),
+        supabase.from('pets').select('*', { count: 'exact', head: true }).eq('status', 'adopted'),
+        supabase.from('adoption_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+      ]);
 
-      if (error) throw error;
-      setStats(data);
+      setStats({
+        total_users: totalUsers || 0,
+        available_pets: availablePets || 0,
+        adopted_pets: adoptedPets || 0,
+        pending_requests: pendingRequests || 0,
+        activities_today: 0,
+        active_users_today: 0
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
     }

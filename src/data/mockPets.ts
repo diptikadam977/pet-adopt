@@ -1,3 +1,10 @@
+import pet1 from '@/assets/pet-1.jpg';
+import pet2 from '@/assets/pet-2.jpg';
+import pet3 from '@/assets/pet-3.jpg';
+import pet4 from '@/assets/pet-4.jpg';
+import pet5 from '@/assets/pet-5.jpg';
+import pet6 from '@/assets/pet-6.jpg';
+import pet7 from '@/assets/pet-7.jpg';
 
 export interface MockPet {
   id: string;
@@ -42,7 +49,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'High',
     location: 'New York, NY',
     adoption_fee: 300,
-    images: ['https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet1],
     status: 'available',
     user_id: 'user1',
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
@@ -65,7 +72,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Low',
     location: 'Los Angeles, CA',
     adoption_fee: 200,
-    images: ['https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet2],
     status: 'available',
     user_id: 'user2',
     created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
@@ -88,7 +95,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Medium',
     location: 'Chicago, IL',
     adoption_fee: 150,
-    images: ['https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet6],
     status: 'available',
     user_id: 'user3',
     created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
@@ -111,7 +118,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Medium',
     location: 'Miami, FL',
     adoption_fee: 250,
-    images: ['https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet4],
     status: 'available',
     user_id: 'user4',
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
@@ -134,7 +141,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'High',
     location: 'Austin, TX',
     adoption_fee: 400,
-    images: ['https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet5],
     status: 'available',
     user_id: 'user5',
     created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
@@ -157,7 +164,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Medium',
     location: 'Seattle, WA',
     adoption_fee: 0,
-    images: ['https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet3],
     status: 'available',
     user_id: 'user6',
     created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
@@ -180,7 +187,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Low',
     location: 'Portland, OR',
     adoption_fee: 300,
-    images: ['https://images.unsplash.com/photo-1573824774092-e5b0e9b3d995?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet2],
     status: 'available',
     user_id: 'user7',
     created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
@@ -203,7 +210,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Medium',
     location: 'Boston, MA',
     adoption_fee: 75,
-    images: ['https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet6],
     status: 'available',
     user_id: 'user8',
     created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
@@ -226,7 +233,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Low',
     location: 'Denver, CO',
     adoption_fee: 350,
-    images: ['https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet5],
     status: 'available',
     user_id: 'user9',
     created_at: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
@@ -249,7 +256,7 @@ export const mockPets: MockPet[] = [
     energy_level: 'Low',
     location: 'San Francisco, CA',
     adoption_fee: 400,
-    images: ['https://images.unsplash.com/photo-1606214174585-fe31582cd22c?w=400&h=300&fit=crop&crop=faces'],
+    images: [pet7],
     status: 'available',
     user_id: 'user10',
     created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -280,7 +287,7 @@ export const mockConversations: MockConversation[] = [
     last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     pet_name: 'Buddy',
-    pet_image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&crop=faces',
+    pet_image: pet1,
     owner_name: 'Sarah Johnson',
     interested_user_name: 'You',
     last_message: 'Would love to meet Buddy this weekend!'
@@ -293,7 +300,7 @@ export const mockConversations: MockConversation[] = [
     last_message_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     pet_name: 'Whiskers',
-    pet_image: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop&crop=faces',
+    pet_image: pet2,
     owner_name: 'Mike Chen',
     interested_user_name: 'You',
     last_message: 'Whiskers seems perfect for my apartment!'
@@ -306,7 +313,7 @@ export const mockConversations: MockConversation[] = [
     last_message_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     pet_name: 'Max',
-    pet_image: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=300&fit=crop&crop=faces',
+    pet_image: pet5,
     owner_name: 'Emily Davis',
     interested_user_name: 'You',
     last_message: 'Thank you for considering Max for adoption'

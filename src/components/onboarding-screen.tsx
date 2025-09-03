@@ -1,5 +1,6 @@
 
 import React from 'react';
+import onboardingHero from '@/assets/onboarding-hero.jpg';
 import { Button } from '@/components/ui/button';
 
 interface OnboardingScreenProps {
@@ -12,7 +13,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       {/* Hero Image */}
       <div className="w-80 h-80 mb-8 rounded-full bg-gradient-to-br from-orange-light to-orange-primary/20 flex items-center justify-center">
         <img 
-          src="/lovable-uploads/e2414ff6-7a81-46dc-884d-5636c15028b5.png" 
+          src={onboardingHero} 
           alt="Find your perfect companion"
           className="w-72 h-72 rounded-full object-cover"
         />

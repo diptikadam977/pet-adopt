@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import heroImage from '@/assets/hero-pets.jpg';
+import heroBanner from '@/assets/hero-banner.jpg';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -15,10 +15,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   }, [onComplete]);
 
   return (
-    <div className="min-h-screen bg-gradient-peach flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-peach flex flex-col items-center justify-center px-6 no-select">
       <div className="w-full max-w-sm mx-auto">
         <img 
-          src={heroImage} 
+          src={heroBanner} 
           alt="Paws & Homes pets" 
           className="w-full h-64 object-cover rounded-3xl mb-8 shadow-lg"
         />

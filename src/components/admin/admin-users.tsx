@@ -44,15 +44,23 @@ export function AdminUsers() {
       const usersWithRoles = await Promise.all(
         (profiles || []).map(async (profile) => {
           try {
-            const { data: hasAdmin } = await supabase
-              .rpc('has_role', { _user_id: profile.id, _role: 'admin' });
+            const { data: adminRole } = await (supabase as any)
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', profile.id)
+              .eq('role', 'admin')
+              .single();
             
-            const { data: hasModerator } = await supabase
-              .rpc('has_role', { _user_id: profile.id, _role: 'moderator' });
+            const { data: moderatorRole } = await (supabase as any)
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', profile.id)
+              .eq('role', 'moderator')
+              .single();
 
             let role = 'user';
-            if (hasAdmin) role = 'admin';
-            else if (hasModerator) role = 'moderator';
+            if (adminRole) role = 'admin';
+            else if (moderatorRole) role = 'moderator';
 
             return {
               ...profile,
@@ -83,14 +91,19 @@ export function AdminUsers() {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      // Use RPC to update role safely
-      const { error } = await supabase.rpc('exec_sql', {
-        query: `
-          INSERT INTO public.user_roles (user_id, role) 
-          VALUES ('${userId}', '${newRole}') 
-          ON CONFLICT (user_id, role) DO UPDATE SET role = '${newRole}'
-        `
-      });
+      // First, delete existing roles for this user
+      await (supabase as any)
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      // Then insert the new role
+      const { error } = await (supabase as any)
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: newRole
+        });
 
       if (error) throw error;
 

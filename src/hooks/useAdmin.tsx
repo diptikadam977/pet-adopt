@@ -20,11 +20,14 @@ export function useAdmin() {
     }
 
     try {
-      const { data, error } = await supabase
-        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      const { data, error } = await (supabase as any)
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
 
-      if (error) throw error;
-      setIsAdmin(data);
+      setIsAdmin(!!data && !error);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
@@ -35,9 +38,12 @@ export function useAdmin() {
 
   const makeUserAdmin = async (userId: string) => {
     try {
-      const { error } = await supabase.rpc('exec_sql', {
-        query: `INSERT INTO public.user_roles (user_id, role) VALUES ('${userId}', 'admin') ON CONFLICT (user_id, role) DO NOTHING`
-      });
+      const { error } = await (supabase as any)
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'admin'
+        });
 
       if (error) throw error;
       return { success: true };

@@ -79,7 +79,7 @@ export function FavoritesScreen({ onBack, onPetSelect }: FavoritesScreenProps) {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-warm-gray-dark">{pet.location}</span>
                         <span className="text-lg font-bold text-primary">
-                          {pet.adoption_fee === 0 ? 'Free' : `$${pet.adoption_free}`}
+                          {pet.adoption_fee === 0 ? 'Free' : `$${pet.adoption_fee}`}
                         </span>
                       </div>
                     </div>

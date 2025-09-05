@@ -18,8 +18,10 @@ import { AuthScreen } from '@/components/auth/auth-screen';
 import { AdoptionRequestScreen } from '@/components/adoption-request-screen';
 import { BottomNav } from '@/components/ui/bottom-nav';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+import { InquiryNotifications } from '@/components/inquiry-notifications';
 
-type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'settings' | 'help' | 'applications' | 'favorites' | 'history';
+type Screen = 'onboarding' | 'auth' | 'home' | 'search' | 'add' | 'requests' | 'profile' | 'my-listings' | 'add-pet' | 'pet-profile' | 'chat' | 'conversations' | 'adopt' | 'settings' | 'help' | 'applications' | 'favorites' | 'history' | 'inquiries';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -32,6 +34,9 @@ function AppContent() {
   } | null>(null);
   const [adoptionPet, setAdoptionPet] = useState<any>(null);
   const { user, loading } = useAuth();
+
+  // Initialize notifications
+  useNotifications();
 
   // Register service worker for PWA
   React.useEffect(() => {
@@ -100,6 +105,9 @@ function AppContent() {
         break;
       case 'history':
         setCurrentScreen('history');
+        break;
+      case 'inquiries':
+        setCurrentScreen('inquiries');
         break;
       default:
         console.log('Navigate to:', screen);
@@ -210,6 +218,13 @@ function AppContent() {
             onBack={() => setCurrentScreen('pet-profile')}
           />
         ) : null;
+      case 'inquiries':
+        return (
+          <InquiryNotifications
+            onBack={() => setCurrentScreen('profile')}
+            onChat={handleChatOpen}
+          />
+        );
       default:
         return (
           <EnhancedHomeScreen 
@@ -225,7 +240,7 @@ function AppContent() {
       {renderScreen()}
       
       {/* Bottom Navigation */}
-      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings', 'settings', 'help', 'applications', 'favorites', 'history'].includes(currentScreen) && (
+      {!['chat', 'pet-profile', 'adopt', 'add-pet', 'my-listings', 'settings', 'help', 'applications', 'favorites', 'history', 'inquiries'].includes(currentScreen) && (
         <BottomNav
           currentScreen={currentScreen}
           onScreenChange={(screen) => setCurrentScreen(screen as Screen)}

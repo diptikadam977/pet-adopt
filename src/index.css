@@ -153,6 +153,25 @@ All colors MUST be HSL.
   }
 }
 
+/* Native app behavior - prevent zoom and enhance touch */
+* {
+  /* Prevent zoom on mobile - Native app behavior */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* Disable zoom completely */
+  -ms-touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  
+  /* Prevent rubber band scrolling */
+  overscroll-behavior: none;
+}
+
 @layer components {
   /* Disable text selection on mobile like React Native */
   .no-select {

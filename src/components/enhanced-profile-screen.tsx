@@ -13,6 +13,7 @@ import { PrivacySecurityScreen } from '@/components/profile/privacy-security-scr
 import { AboutScreen } from '@/components/profile/about-screen';
 import { HelpSupportScreen } from '@/components/profile/help-support-screen';
 import { AdminDashboard } from '@/components/admin/admin-dashboard';
+import { Bell } from 'lucide-react';
 
 interface EnhancedProfileScreenProps {
   onBack: () => void;
@@ -118,6 +119,12 @@ export function EnhancedProfileScreen({ onBack, onNavigate }: EnhancedProfileScr
       title: 'Favorites', 
       subtitle: 'Manage your saved pets',
       action: () => onNavigate?.('favorites')
+    },
+    { 
+      icon: Bell, 
+      title: 'Pet Inquiries', 
+      subtitle: 'Manage adoption inquiries for your pets',
+      action: () => onNavigate?.('inquiries')
     },
     { 
       icon: PawPrint, 

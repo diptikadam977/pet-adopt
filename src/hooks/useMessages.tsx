@@ -120,14 +120,16 @@ export function useMessages(conversationId?: string, receiverId?: string) {
     if (!user || !receiverId) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert({
           sender_id: user.id,
           receiver_id: receiverId,
           pet_id: petId,
           content
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -138,8 +140,12 @@ export function useMessages(conversationId?: string, receiverId?: string) {
           .update({ last_message_at: new Date().toISOString() })
           .eq('id', conversationId);
       }
+
+      // Refresh messages to ensure consistency
+      await fetchMessages();
     } catch (error) {
       console.error('Error sending message:', error);
+      throw error;
     }
   };
 
@@ -150,7 +156,7 @@ export function useMessages(conversationId?: string, receiverId?: string) {
 
     // Subscribe to real-time messages
     const channel = supabase
-      .channel('messages')
+      .channel(`messages:${user.id}:${receiverId}`)
       .on(
         'postgres_changes',
         {
@@ -159,9 +165,37 @@ export function useMessages(conversationId?: string, receiverId?: string) {
           table: 'messages',
           filter: `or(and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${user.id}))`
         },
-        (payload) => {
+        async (payload) => {
+          console.log('New message received:', payload);
           const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
+          
+          // Get sender profile for the new message
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('full_name, profile_photo')
+            .eq('id', newMessage.sender_id)
+            .single();
+
+          const messageWithProfile = {
+            ...newMessage,
+            sender_profile: senderProfile
+          };
+
+          setMessages(prev => {
+            // Check if message already exists
+            if (prev.find(msg => msg.id === newMessage.id)) {
+              return prev;
+            }
+            return [...prev, messageWithProfile];
+          });
+
+          // Show notification if message is from other user
+          if (newMessage.sender_id !== user.id && 'Notification' in window) {
+            new Notification(`New message from ${senderProfile?.full_name || 'User'}`, {
+              body: newMessage.content,
+              icon: '/icon-192.png'
+            });
+          }
         }
       )
       .subscribe();

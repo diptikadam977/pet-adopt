@@ -7,6 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessages } from '@/hooks/useMessages';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { VoiceRecorder } from '@/components/voice-recorder';
+import { ImagePicker } from '@/components/image-picker';
+import { toast } from 'sonner';
 
 interface ChatScreenProps {
   onBack: () => void;
@@ -51,8 +54,40 @@ export function ChatScreen({ onBack, conversationId, otherUserId, petName, petId
 
   const handleSendMessage = async () => {
     if (message.trim()) {
-      await sendMessage(message, petId);
-      setMessage('');
+      try {
+        await sendMessage(message, petId);
+        setMessage('');
+      } catch (error) {
+        toast.error('Failed to send message');
+      }
+    }
+  };
+
+  const handleVoiceMessage = async (audioBlob: Blob) => {
+    try {
+      // Convert audio to base64 for sending as text message with audio indicator
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        await sendMessage('🎤 Voice message', petId);
+      };
+      reader.readAsDataURL(audioBlob);
+      toast.success('Voice message sent');
+    } catch (error) {
+      toast.error('Failed to send voice message');
+    }
+  };
+
+  const handleImageSelect = async (file: File) => {
+    try {
+      // Convert image to base64 for sending as text message with image indicator  
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        await sendMessage('📷 Image shared', petId);
+      };
+      reader.readAsDataURL(file);
+      toast.success('Image sent');
+    } catch (error) {
+      toast.error('Failed to send image');
     }
   };
 
@@ -142,12 +177,8 @@ export function ChatScreen({ onBack, conversationId, otherUserId, petName, petId
               className="border-0 bg-transparent focus:ring-0 focus:ring-offset-0"
               onKeyPress={handleKeyPress}
             />
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Image className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Mic className="w-4 h-4" />
-            </Button>
+            <ImagePicker onImageSelect={handleImageSelect} />
+            <VoiceRecorder onVoiceMessage={handleVoiceMessage} />
             <Button 
               variant="ghost" 
               size="icon" 

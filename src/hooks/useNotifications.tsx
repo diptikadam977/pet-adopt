@@ -3,6 +3,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
+// Create notification sound
+const playNotificationSound = () => {
+  // Create a simple notification tone programmatically
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  
+  // Create a simple beep sound like WhatsApp
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+  oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+  
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+  
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.3);
+};
+
 export function useNotifications() {
   const { user } = useAuth();
 
@@ -45,6 +67,13 @@ export function useNotifications() {
             description: `${requester?.full_name} is interested in adopting your pet`
           });
 
+          // Play notification sound
+          try {
+            playNotificationSound();
+          } catch (error) {
+            console.log('Could not play sound:', error);
+          }
+
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(`New adoption inquiry for ${pet?.name}`, {
               body: `${requester?.full_name} is interested in adopting your pet`,
@@ -79,6 +108,13 @@ export function useNotifications() {
             toast.success(`Adoption request accepted!`, {
               description: `Your request for ${pet?.name} has been accepted`
             });
+
+            // Play notification sound
+            try {
+              playNotificationSound();
+            } catch (error) {
+              console.log('Could not play sound:', error);
+            }
 
             if ('Notification' in window && Notification.permission === 'granted') {
               new Notification('Adoption request accepted!', {

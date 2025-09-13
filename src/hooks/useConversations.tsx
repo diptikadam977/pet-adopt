@@ -157,14 +157,13 @@ export function useConversations() {
     if (!user) return null;
 
     try {
-      // Check if conversation already exists
+      // Check if conversation already exists - look for any combination
       const { data: existing } = await supabase
         .from('conversations')
         .select('id')
         .eq('pet_id', petId)
-        .eq('owner_id', ownerId)
-        .eq('interested_user_id', user.id)
-        .single();
+        .or(`and(owner_id.eq.${ownerId},interested_user_id.eq.${user.id}),and(owner_id.eq.${user.id},interested_user_id.eq.${ownerId})`)
+        .maybeSingle();
 
       if (existing) {
         return existing.id;

@@ -30,19 +30,44 @@ export function PetProfile({ onBack, onAdopt, onChat, petId }: PetProfileProps) 
 
   const fetchPet = async () => {
     try {
+      // First try from database
       const { data, error } = await supabase
         .from('pets')
         .select('*')
         .eq('id', petId)
         .single();
 
-      if (error) throw error;
-      setPet(data);
+      if (data) {
+        setPet(data);
+        return;
+      }
+      
+      // If not found in database, search in mock data
+      const { mockPets } = await import('@/data/mockPets');
+      const mockPet = mockPets.find(pet => pet.id === petId);
+      
+      if (mockPet) {
+        setPet(mockPet);
+      } else {
+        throw new Error('Pet not found');
+      }
     } catch (error) {
       console.error('Error fetching pet:', error);
+      // Try fallback to mock data if database fails
+      try {
+        const { mockPets } = await import('@/data/mockPets');
+        const mockPet = mockPets.find(pet => pet.id === petId);
+        if (mockPet) {
+          setPet(mockPet);
+          return;
+        }
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load pet details",
+        description: "Pet not found",
         variant: "destructive",
       });
     } finally {

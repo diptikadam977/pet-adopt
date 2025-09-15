@@ -19,76 +19,76 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 210 40% 8%;
 
-    --primary: 210 40% 8%;
+    --primary: 200 80% 60%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 98%;
-    --secondary-foreground: 210 40% 8%;
+    --secondary: 200 30% 95%;
+    --secondary-foreground: 200 80% 60%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 200 20% 92%;
+    --muted-foreground: 200 20% 50%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 210 40% 8%;
+    --accent: 200 30% 95%;
+    --accent-foreground: 200 80% 60%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 60 9.1% 97.8%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 200 15% 88%;
+    --input: 200 15% 88%;
+    --ring: 200 80% 60%;
 
-    /* Pet adoption app colors - Blue and White theme */
-    --orange-primary: 221.2 83.2% 53.3%;
-    --orange-secondary: 221.2 83.2% 43.3%;
-    --orange-light: 210 40% 98%;
-    --warm-gray: 210 20% 85%;
-    --warm-gray-dark: 215 16% 47%;
+    /* Pet adoption app colors - Misty Blue theme */
+    --orange-primary: 200 80% 60%;
+    --orange-secondary: 200 70% 50%;
+    --orange-light: 200 30% 95%;
+    --warm-gray: 200 15% 85%;
+    --warm-gray-dark: 200 20% 50%;
     
     /* Gradients */
     --gradient-warm: linear-gradient(135deg, hsl(var(--orange-light)), hsl(var(--orange-primary)));
-    --gradient-peach: linear-gradient(180deg, hsl(210 40% 98%), hsl(221.2 83.2% 95%));
+    --gradient-peach: linear-gradient(180deg, hsl(200 30% 95%), hsl(200 80% 90%));
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 200 30% 95%;
+    --sidebar-foreground: 200 20% 30%;
+    --sidebar-primary: 200 80% 60%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 200 20% 90%;
+    --sidebar-accent-foreground: 200 80% 60%;
+    --sidebar-border: 200 15% 88%;
+    --sidebar-ring: 200 80% 60%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 200 20% 8%;
+    --foreground: 200 30% 95%;
+    --card: 200 20% 8%;
+    --card-foreground: 200 30% 95%;
+    --popover: 200 20% 8%;
+    --popover-foreground: 200 30% 95%;
+    --primary: 200 80% 70%;
+    --primary-foreground: 200 20% 8%;
+    --secondary: 200 30% 15%;
+    --secondary-foreground: 200 30% 95%;
+    --muted: 200 30% 15%;
+    --muted-foreground: 200 20% 65%;
+    --accent: 200 30% 15%;
+    --accent-foreground: 200 30% 95%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --destructive-foreground: 200 30% 95%;
+    --border: 200 30% 15%;
+    --input: 200 30% 15%;
+    --ring: 200 80% 70%;
+    --sidebar-background: 200 30% 10%;
+    --sidebar-foreground: 200 30% 95%;
+    --sidebar-primary: 200 80% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 200 30% 15%;
+    --sidebar-accent-foreground: 200 30% 95%;
+    --sidebar-border: 200 30% 15%;
+    --sidebar-ring: 200 80% 70%;
   }
 }
 

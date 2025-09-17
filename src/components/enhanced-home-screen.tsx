@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Heart, MapPin, Plus, User } from 'lucide-react';
+import { Search, Heart, MapPin, Plus, User, Dog, Cat, Bird, Rabbit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +15,7 @@ interface EnhancedHomeScreenProps {
 
 export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreenProps) {
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<string>('all');
   const { pets, loading } = usePets();
 
   const toggleFavorite = (petId: string) => {
@@ -24,6 +25,12 @@ export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreen
         : [...prev, petId]
     );
   };
+
+  // Filter pets based on selected type
+  const filteredPets = pets.filter(pet => {
+    if (selectedType === 'all') return true;
+    return pet.type?.toLowerCase() === selectedType.toLowerCase();
+  });
 
   const getImageUrl = (pet: any) => {
     if (pet.images && pet.images.length > 0) {
@@ -101,7 +108,7 @@ export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreen
 
       {/* Pet Ads Carousel */}
       <div className="p-4">
-        <PetAdsCarousel pets={pets || []} onPetSelect={onPetSelect} />
+        <PetAdsCarousel pets={filteredPets || []} onPetSelect={onPetSelect} />
       </div>
 
       {/* Quick Categories */}
@@ -109,19 +116,32 @@ export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreen
         <h2 className="text-lg font-semibold text-primary mb-3">Browse by Type</h2>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {[
-            { type: 'Dogs', icon: '🐕', count: pets.filter(p => p.type?.toLowerCase() === 'dog').length },
-            { type: 'Cats', icon: '🐱', count: pets.filter(p => p.type?.toLowerCase() === 'cat').length },
-            { type: 'Birds', icon: '🐦', count: pets.filter(p => p.type?.toLowerCase() === 'bird').length },
-            { type: 'Rabbits', icon: '🐰', count: pets.filter(p => p.type?.toLowerCase() === 'rabbit').length }
-          ].map((category) => (
-            <Card key={category.type} className="min-w-[120px] cursor-pointer hover:shadow-md transition-shadow border-0 bg-white shadow-sm">
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl mb-2">{category.icon}</div>
-                <p className="font-medium text-primary">{category.type}</p>
-                <p className="text-xs text-warm-gray-dark">{category.count} available</p>
-              </CardContent>
-            </Card>
-          ))}
+            { type: 'All', value: 'all', Icon: Heart, count: pets.length },
+            { type: 'Dogs', value: 'dog', Icon: Dog, count: pets.filter(p => p.type?.toLowerCase() === 'dog').length },
+            { type: 'Cats', value: 'cat', Icon: Cat, count: pets.filter(p => p.type?.toLowerCase() === 'cat').length },
+            { type: 'Birds', value: 'bird', Icon: Bird, count: pets.filter(p => p.type?.toLowerCase() === 'bird').length },
+            { type: 'Rabbits', value: 'rabbit', Icon: Rabbit, count: pets.filter(p => p.type?.toLowerCase() === 'rabbit').length }
+          ].map((category) => {
+            const IconComponent = category.Icon;
+            const isSelected = selectedType === category.value;
+            return (
+              <Card 
+                key={category.type} 
+                className={`min-w-[120px] cursor-pointer hover:shadow-md transition-all border-0 shadow-sm ${
+                  isSelected ? 'bg-blue-600 text-white' : 'bg-white'
+                }`}
+                onClick={() => setSelectedType(category.value)}
+              >
+                <CardContent className="p-4 text-center">
+                  <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-blue-600'}`} />
+                  <p className={`font-medium ${isSelected ? 'text-white' : 'text-primary'}`}>{category.type}</p>
+                  <p className={`text-xs ${isSelected ? 'text-blue-100' : 'text-warm-gray-dark'}`}>
+                    {category.count} available
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
@@ -139,7 +159,7 @@ export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreen
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pets.slice(0, 6).map((pet) => (
+          {filteredPets.slice(0, 6).map((pet) => (
             <Card key={pet.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-md bg-white">
               <div onClick={() => onPetSelect(pet.id)}>
                 <div className="relative aspect-[4/3]">
@@ -205,7 +225,7 @@ export function EnhancedHomeScreen({ onPetSelect, onSearch }: EnhancedHomeScreen
           ))}
         </div>
 
-        {pets.length === 0 && (
+        {filteredPets.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="w-8 h-8 text-blue-600" />

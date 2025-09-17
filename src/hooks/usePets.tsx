@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { mockPets, type MockPet } from '@/data/mockPets';
 import { toast } from 'sonner';
 
 export interface Pet {
@@ -34,11 +33,32 @@ export function usePets() {
 
   useEffect(() => {
     fetchPets();
+    
+    // Setup real-time subscription
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pets'
+        },
+        (payload) => {
+          console.log('Real-time update:', payload);
+          fetchPets(); // Refetch data when changes occur
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
   }, []);
 
   const fetchPets = async () => {
     try {
-      // First try to get real data from Supabase
+      // Get real data from Supabase only
       const { data, error } = await supabase
         .from('pets')
         .select('*')
@@ -47,19 +67,10 @@ export function usePets() {
 
       if (error) throw error;
 
-      // Combine real data with mock data for a richer experience
-      const combinedPets = [...(data || []), ...mockPets];
-      
-      // Sort by created_at to show newest first
-      const sortedPets = combinedPets.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setPets(sortedPets);
+      setPets(data || []);
     } catch (error) {
       console.error('Error fetching pets:', error);
-      // If there's an error, fall back to mock data
-      setPets(mockPets);
+      setPets([]);
     } finally {
       setLoading(false);
     }

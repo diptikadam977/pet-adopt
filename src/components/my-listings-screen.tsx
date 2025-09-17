@@ -1,10 +1,27 @@
 
-import React from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Plus, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
-import { usePets } from '@/hooks/usePets';
+import { usePets, type Pet } from '@/hooks/usePets';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { EditPetDialog } from '@/components/edit-pet-dialog';
 
 interface MyListingsScreenProps {
   onBack: () => void;
@@ -14,9 +31,36 @@ interface MyListingsScreenProps {
 
 export function MyListingsScreen({ onBack, onAddPet, onPetSelect }: MyListingsScreenProps) {
   const { user } = useAuth();
-  const { pets } = usePets();
+  const { pets, deletePet, updatePet } = usePets();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedPetId, setSelectedPetId] = useState<string>('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   
   const userPets = pets.filter(pet => pet.user_id === user?.id);
+
+  const handleDeletePet = async () => {
+    if (selectedPetId) {
+      await deletePet(selectedPetId);
+      setDeleteDialogOpen(false);
+      setSelectedPetId('');
+    }
+  };
+
+  const handleEditPet = (pet: Pet) => {
+    setSelectedPet(pet);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdatePet = async (petData: Partial<Pet>) => {
+    if (selectedPet) {
+      const success = await updatePet(selectedPet.id, petData);
+      if (success) {
+        setEditDialogOpen(false);
+        setSelectedPet(null);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -35,19 +79,50 @@ export function MyListingsScreen({ onBack, onAddPet, onPetSelect }: MyListingsSc
         {userPets.map((pet) => (
           <Card 
             key={pet.id}
-            className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => onPetSelect(pet.id)}
+            className="rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
           >
             <CardContent className="p-0">
               <div className="flex items-center">
-                <img 
-                  src={pet.images?.[0] || '/placeholder.svg'} 
-                  alt={pet.name}
-                  className="w-20 h-20 rounded-2xl object-cover m-4"
-                />
-                <div className="flex-1 pr-4">
-                  <h3 className="text-xl font-bold text-primary mb-1">{pet.name}</h3>
-                  <p className="text-warm-gray-dark">{pet.breed}</p>
+                <div 
+                  className="flex items-center flex-1 cursor-pointer"
+                  onClick={() => onPetSelect(pet.id)}
+                >
+                  <img 
+                    src={pet.images?.[0] || '/placeholder.svg'} 
+                    alt={pet.name}
+                    className="w-20 h-20 rounded-2xl object-cover m-4"
+                  />
+                  <div className="flex-1 pr-4">
+                    <h3 className="text-xl font-bold text-primary mb-1">{pet.name}</h3>
+                    <p className="text-warm-gray-dark">{pet.breed}</p>
+                    <p className="text-sm text-warm-gray-dark">₹{pet.adoption_fee}</p>
+                  </div>
+                </div>
+                
+                <div className="pr-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditPet(pet)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedPetId(pet.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </CardContent>
@@ -72,6 +147,37 @@ export function MyListingsScreen({ onBack, onAddPet, onPetSelect }: MyListingsSc
           Add Listing
         </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Pet Listing</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this pet listing? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeletePet}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Pet Dialog */}
+      {selectedPet && (
+        <EditPetDialog
+          pet={selectedPet}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSave={handleUpdatePet}
+        />
+      )}
     </div>
   );
 }

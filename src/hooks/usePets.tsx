@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { mockPets, type MockPet } from '@/data/mockPets';
+import { toast } from 'sonner';
 
 export interface Pet {
   id: string;
@@ -64,5 +65,49 @@ export function usePets() {
     }
   };
 
-  return { pets, loading, refetch: fetchPets };
+  const deletePet = async (petId: string) => {
+    try {
+      const { error } = await supabase
+        .from('pets')
+        .delete()
+        .eq('id', petId);
+
+      if (error) throw error;
+
+      // Update local state by removing the deleted pet
+      setPets(prevPets => prevPets.filter(pet => pet.id !== petId));
+      toast.success('Pet listing deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error deleting pet:', error);
+      toast.error('Failed to delete pet listing');
+      return false;
+    }
+  };
+
+  const updatePet = async (petId: string, petData: Partial<Pet>) => {
+    try {
+      const { error } = await supabase
+        .from('pets')
+        .update(petData)
+        .eq('id', petId);
+
+      if (error) throw error;
+
+      // Update local state
+      setPets(prevPets => 
+        prevPets.map(pet => 
+          pet.id === petId ? { ...pet, ...petData } : pet
+        )
+      );
+      toast.success('Pet listing updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating pet:', error);
+      toast.error('Failed to update pet listing');
+      return false;
+    }
+  };
+
+  return { pets, loading, refetch: fetchPets, deletePet, updatePet };
 }
